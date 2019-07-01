@@ -70,7 +70,7 @@ function dig()
     turtle.dig()
     move.fd(1)
     turtle.turnLeft()
-    --I'm in the next shaft
+    --I'm on the next shaft
     --And I should go down a bit
     while true do
         if move.dn(1) then
@@ -97,6 +97,7 @@ function dig()
     for goUp=1, depth do
         if not move.up(1) then
             turtle.digUp()
+            sleep(0.5)
             move.up(1)
         end
         checkItems()
@@ -143,12 +144,12 @@ function runDig()
         depth=0
         if i < tonumber(howFar[1]) then
             for goo=1, 2 do
-                while not turtle.forward() do
+                if not move.fd(1) then
                     turtle.dig()
                 end
             end
             turtle.turnRight()
-            while not move.fd(1) do
+            if not move.fd(1) then
                 turtle.dig()
             end
             turtle.turnLeft()
