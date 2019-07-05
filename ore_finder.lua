@@ -58,8 +58,13 @@ function dig()
     end
     -- reached the bottom.
     -- going to the next shaft
-    depth = depth - 5
-    move.up(5)
+    for iUp=1, 5 do
+        if not move.up(1) then
+            turtle.digUp()
+            move.up(1)
+        end
+        depth = depth - 1
+    end
     for m=1,2 do
         if not move.fd(1) then
             turtle.dig()
@@ -68,8 +73,12 @@ function dig()
     end
     turtle.turnRight()
     turtle.dig()
-    move.fd(1)
+    if not move.fd(1) then
+        turtle.dig()
+        move.fd(1)
+    end
     turtle.turnLeft()
+    print("Going to the next shaft")
     --I'm on the next shaft
     --And I should go down a bit
     while true do
@@ -80,6 +89,7 @@ function dig()
             depth = depth + 1
         else
             -- can't go down nor dig down
+            print("Can't go any further, depth: "..depth)
             break
         end
         --close the hole you entered
@@ -101,6 +111,7 @@ function dig()
             move.up(1)
         end
         checkItems()
+        print("Depth going up "..goUp.." Of "..depth)
     end
     turtle.select(14)
     turtle.placeDown()
