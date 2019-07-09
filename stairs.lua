@@ -12,15 +12,18 @@ if #depth < 1 then
 end
 
 if wifi == true then
-    rednet.send(5,"Doing stairs for "..depth.." depth")
+    rednet.send(5,"Doing stairs for "..depth[1].." depth")
+end
 
 function cutSides()
-    turtle.turnLeft()
-    turtle.dig()
-    turtle.turnRight()
-    turtle.turnRight()
-    turtle.dig()
-    turtle.turnLeft()
+    if #depth > 1 then
+        turtle.turnLeft()
+        turtle.dig()
+        turtle.turnRight()
+        turtle.turnRight()
+        turtle.dig()
+        turtle.turnLeft()
+    end
 end
 
 function torchit()
@@ -29,7 +32,7 @@ function torchit()
     turtle.select(1)
 end
 
-for i = 1, depth do
+for i = 1, depth[1] do
     turtle.digDown()
     move.dn(1)
     cutSides()
