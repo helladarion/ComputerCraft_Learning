@@ -1,4 +1,9 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
+if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
+    rednet.open("Left")
+    print("Openned Wifi on the left side")
+    wifi=true
+end
 -- coal on slot 16
 -- stone on slot 15
 -- dirt on slot 14
@@ -28,6 +33,9 @@ function checkItems()
         end
         if dontWant == 0 then
             print("found Ore")
+            if wifi == true then
+                rednet.send(5, "found ore", "shaft")
+            end
             turtle.dig()
         end
         turtle.turnRight()
@@ -55,6 +63,9 @@ function dig()
             checkItems()
         end
         print(depth)
+        if wifi == true then
+            rednet.send(5, "I'm at "..depth, "status")
+        end
     end
     -- reached the bottom.
     -- going to the next shaft
@@ -79,6 +90,9 @@ function dig()
     end
     turtle.turnLeft()
     print("Going to the next shaft")
+    if wifi == true then
+        rednet.send(5, "Going to the next shaft", "status")
+    end
     --I'm on the next shaft
     --And I should go down a bit
     while true do
@@ -90,6 +104,9 @@ function dig()
         else
             -- can't go down nor dig down
             print("Can't go any further, depth: "..depth)
+            if wifi == true then
+                rednet.send(5, "Can't go any further, depth: "..depth, "status")
+            end
             break
         end
         --close the hole you entered
@@ -112,6 +129,11 @@ function dig()
         end
         checkItems()
         print("Depth going up "..goUp.." Of "..depth)
+        if wifi == true then
+            if depth % 5 == 0 then
+                rednet.send(5, "Depth going up "..goUp.." Of "..depth, "status")
+            end
+        end
     end
     turtle.select(14)
     turtle.placeDown()
