@@ -44,6 +44,7 @@ function digUpDown()
     while turtle.detectUp() or turtle.detectDown() do
         turtle.digUp()
         turtle.digDown()
+        sleep(0.5)
     end
 end
 
@@ -87,4 +88,13 @@ if side == "right" then
 else
     turtle.turnLeft()
 end
-move.fd(1)
+move.fd(3)
+if side == "right" then
+    turtle.turnRight()
+else
+    turtle.turnLeft()
+end
+
+if wifi == true then
+    rednet.send(channel, "I'm Done com see me", "status")
+end
