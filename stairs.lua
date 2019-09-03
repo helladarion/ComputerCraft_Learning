@@ -35,14 +35,14 @@ end
 for i = 1, depth[1] do
     turtle.digDown()
     move.dn(1)
-    cutSides()
+    --cutSides()
     turtle.dig()
     move.fd(1)
-    cutSides()
+    --cutSides()
     for x =1, 2 do
         turtle.digUp()
         move.up(1)
-        cutSides()
+        --cutSides()
     end
     move.dn(1)
     if i % 5 == 0 then
