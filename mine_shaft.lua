@@ -57,44 +57,51 @@ function placeTorch()
     end
 end
 
-totalMove=tonumber(params[1])
-side=params[2]
+function doTheWork()
+    totalMove=tonumber(params[1])
+    side=params[2]
 
-if wifi == true then
-    rednet.send(channel, "Starting the work, shaft with "..totalMove.." and turning to the "..side, "status")
+    if wifi == true then
+        rednet.send(channel, "Starting the work, shaft with "..totalMove.." and turning to the "..side, "status")
+    end
+
+    shaft(totalMove)
+    -- turn and get ready to go back, from other shaft
+    if wifi == true then
+        rednet.send(channel, "I'm turning back", "status")
+    end
+    if side == "r" then
+        turtle.turnRight()
+    else
+        turtle.turnLeft()
+    end
+    caveWalkDig(4)
+    if side == "r" then
+        turtle.turnRight()
+    else
+        turtle.turnLeft()
+    end
+    -- dig the next shaft back
+    shaft(totalMove)
+    -- Finishing and getting out of the way
+    if side == "r" then
+        turtle.turnLeft()
+    else
+        turtle.turnRight()
+    end
+    move.fd(3)
+    if side == "r" then
+        turtle.turnRight()
+    else
+        turtle.turnLeft()
+    end
+
+    if wifi == true then
+        rednet.send(channel, "I'm Done come see me", "status")
+    end
 end
 
-shaft(totalMove)
--- turn and get ready to go back, from other shaft
-if wifi == true then
-    rednet.send(channel, "I'm turning back", "status")
-end
-if side == "r" then
-    turtle.turnRight()
-else
-    turtle.turnLeft()
-end
-caveWalkDig(4)
-if side == "r" then
-    turtle.turnRight()
-else
-    turtle.turnLeft()
-end
--- dig the next shaft back
-shaft(totalMove)
--- Finishing and getting out of the way
-if side == "right" then
-    turtle.turnRight()
-else
-    turtle.turnLeft()
-end
-move.fd(3)
-if side == "right" then
-    turtle.turnRight()
-else
-    turtle.turnLeft()
+for i=1, 2 do
+    doTheWork()
 end
 
-if wifi == true then
-    rednet.send(channel, "I'm Done com see me", "status")
-end
