@@ -19,6 +19,9 @@ function cutit()
     turtle.turnRight()
     turtle.dig()
     move.fd(1)
+    if turtle.detectUp() then
+        turtle.digUp()
+    end
     turtle.turnLeft()
     while turtle.compareDown() do
         turtle.digDown()

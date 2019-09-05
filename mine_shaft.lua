@@ -7,6 +7,9 @@ end
 channel=2
 turtle.select(1)
 
+-- coal on 16
+-- torches on 15
+-- 2 chests on 14
 params = { ... }
 if #params < 1 then
     print("Usage: mine_shaft <distance>")
@@ -49,7 +52,7 @@ function digUpDown()
 end
 
 function placeTorch()
-    turtle.select(11)
+    turtle.select(15)
     turtle.placeDown()
     turtle.select(1)
     if wifi == true then
@@ -89,12 +92,12 @@ function doTheWork()
     else
         turtle.turnRight()
     end
-    move.fd(3)
-    if side == "r" then
-        turtle.turnRight()
-    else
-        turtle.turnLeft()
-    end
+    --move.fd(4)
+    --if side == "r" then
+    --    turtle.turnRight()
+    --else
+    --    turtle.turnLeft()
+    --end
 
     if wifi == true then
         rednet.send(channel, "I'm Done come see me", "status")
@@ -103,5 +106,11 @@ end
 
 for i=1, 2 do
     doTheWork()
+    turtle.select(14)
+    turtle.placeUp()
+    -- cleaning turtle
+    for i=1,13 do 
+        tutle.dropUp()
+    end
 end
 
