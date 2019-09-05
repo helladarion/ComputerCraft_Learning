@@ -51,9 +51,9 @@ function plant()
     turtle.place()
 end
 cutit()
---plant()
+plant()
 function cutNext()
     turtle.turnLeft()
-    move.fd(6)
+    move.fd(14)
     turtle.turnRight()
 end
