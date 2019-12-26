@@ -1,5 +1,6 @@
 rednet.open("Right")
 print("Waiting for signals from turtles")
+peripheral.call("top", "write", "Waiting for signals from turtles")
 while true do
     id, msg, prot = rednet.receive()
     if id ~= null then
