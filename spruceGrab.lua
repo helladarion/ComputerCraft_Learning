@@ -5,6 +5,7 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     wifi=true
 end
 listen_computerId=5
+direction=0
 
 function cutit()
     turtle.select(1)
@@ -36,47 +37,62 @@ function cutit()
 end
 
 function plant()
+    move.fd(1)
     turtle.select(15)
-    move.fd(1)
     turtle.place()
     turtle.turnRight()
     move.fd(1)
     turtle.turnLeft()
+    turtle.select(15)
     turtle.place()
     turtle.turnRight()
     move.bk(1)
+    turtle.select(15)
     turtle.place()
     turtle.turnLeft()
     move.bk(1)
+    turtle.select(15)
     turtle.place()
+end
+
+function checkNext()
+    print(direction)
+    if direction % 2 == 0 then
+        turtle.turnLeft()
+    else
+        turtle.turnRight()
+    end
+    move.fd(11)
+    if direction % 2 == 0 then
+        turtle.turnRight()
+    else
+        turtle.turnLeft()
+    end
+    direction = direction + 1
 end
 
 function doRoutine()
     while true do
         turtle.select(1)
+        move.fd(3)
         while not turtle.compare() do
-            move.fd(3)
             if wifi == true then
-                rednet.send(5, "Tree not ready yet, waiting...", "spruceGrab")
+                rednet.send(listen_computerId, "Tree not ready yet, checking next", "spruceGrab")
             end
             move.bk(3)
+            checkNext()
             sleep(60)
+            move.fd(3)
         end
-        move.fd(3)
         if wifi == true then
-            rednet.send(5, "Cutting Tree", "spruceGrab")
+            rednet.send(listen_computerId, "Cutting Tree", "spruceGrab")
         end
         cutit()
         plant()
         move.bk(3)
-        sleep(120)
+        sleep(60)
     end
 end
 
 doRoutine()
 
-function cutNext()
-    turtle.turnLeft()
-    move.fd(12)
-    turtle.turnRight()
-end
