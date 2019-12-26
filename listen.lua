@@ -1,5 +1,5 @@
 rednet.open("Right")
-print("Waiting for signals from turtle 2")
+print("Waiting for signals from turtles")
 while true do
     id, msg, prot = rednet.receive()
     if id ~= null then

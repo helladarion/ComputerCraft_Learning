@@ -4,7 +4,7 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     print("Openned Wifi on the left side")
     wifi=true
 end
-channel=2
+listen_computerId=5
 
 function cutit()
     turtle.select(1)
@@ -50,10 +50,29 @@ function plant()
     move.bk(1)
     turtle.place()
 end
-cutit()
-plant()
+
+function doRoutine()
+    while true do
+        turtle.select(1)
+        move.fd(3)
+        while not turtle.detect() do
+            if wifi == true then
+                rednet.send(5, "Tree not ready yet", "spruceGrab")
+            end
+            move.bk(3)
+            sleep(60)
+        end
+        cutit()
+        plant()
+        move.bk(3)
+        sleep(60)
+    end
+end
+
+doRoutine()
+
 function cutNext()
     turtle.turnLeft()
-    move.fd(14)
+    move.fd(12)
     turtle.turnRight()
 end
