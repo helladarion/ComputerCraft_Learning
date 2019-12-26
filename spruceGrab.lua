@@ -37,6 +37,9 @@ function cutit()
 end
 
 function plant()
+    if wifi == true then
+        rednet.send(listen_computerId, "Re-planting "..tree.." Tree", "spruceGrab")
+    end
     move.fd(1)
     turtle.select(15)
     turtle.place()
@@ -71,21 +74,31 @@ function checkNext()
     direction = direction + 1
 end
 
+function checkTreeName()
+    if direction % 2 == 0 then
+        tree = "first"
+    else
+        tree = "second"
+    end
+end
+
 function doRoutine()
     while true do
         turtle.select(1)
         move.fd(3)
         while not turtle.compare() do
+            checkTreeName()
             if wifi == true then
-                rednet.send(listen_computerId, "Tree not ready yet, checking next", "spruceGrab")
+                rednet.send(listen_computerId, "Checking "..tree.." tree", "spruceGrab")
             end
             move.bk(3)
             checkNext()
             sleep(60)
             move.fd(3)
         end
+        checkTreeName()
         if wifi == true then
-            rednet.send(listen_computerId, "Cutting Tree", "spruceGrab")
+            rednet.send(listen_computerId, "Cutting "..tree.." Tree", "spruceGrab")
         end
         cutit()
         plant()
