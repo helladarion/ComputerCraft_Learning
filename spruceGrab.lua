@@ -55,7 +55,7 @@ function doRoutine()
     while true do
         turtle.select(1)
         move.fd(3)
-        while not turtle.detect() do
+        while not turtle.compare() do
             if wifi == true then
                 rednet.send(5, "Tree not ready yet", "spruceGrab")
             end
