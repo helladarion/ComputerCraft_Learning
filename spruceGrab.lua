@@ -69,7 +69,7 @@ function doRoutine()
         cutit()
         plant()
         move.bk(3)
-        sleep(60)
+        sleep(120)
     end
 end
 
