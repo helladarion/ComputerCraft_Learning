@@ -56,6 +56,47 @@ function checkLogType()
     end
 end
 
+function checkSaplings()
+    n_saplings = turtle.getItemCount(15)
+    if n_saplings < 4 then
+        print("We need at least 4 spruce saplings on slot 15 in order to replant")
+        if wifi == true then
+            rednet.send(listen_computerId, "We need at least 4 spruce saplings on slot 15 in order to replant", "spruceGrab")
+        end
+        -- Exiting
+        error()
+    else
+        -- Check if they are the right type of sapplings
+        prev_slot = turtle.getSelectedSlot()
+        if turtle.getItemDetail(15).name == "minecraft:sapling" then
+            turtle.select(15)
+            turtle.place()
+            bol, value = turtle.inspect()
+            if value.state.type == "spruce" then
+                print("All good we have the right type of sapling")
+                if wifi == true then
+                    rednet.send(listen_computerId, "All good we have the right type of sapling", "spruceGrab")
+                end
+           else
+                print("That is not the right type of sapling")
+                if wifi == true then
+                    rednet.send(listen_computerId, "That is not the right type of sapling", "spruceGrab")
+                end
+                -- Exiting
+                error()
+            end
+        else
+            print("Those are not saplings, we need spruce saplings on slot 15")
+            if wifi == true then
+                rednet.send(listen_computerId, "Those are not saplings, we need spruce saplings on slot 15", "spruceGrab")
+            end
+            -- Exiting
+            error()
+        end
+    end
+end
+
+
 function cutit()
     turtle.select(1)
     turtle.dig()
@@ -86,6 +127,7 @@ function cutit()
 end
 
 function plant()
+    checkSaplings()
     if wifi == true then
         rednet.send(listen_computerId, "Re-planting "..tree.." Tree", "spruceGrab")
     end
