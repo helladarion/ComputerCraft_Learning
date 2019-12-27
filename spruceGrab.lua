@@ -196,7 +196,6 @@ function plant()
 end
 
 function checkNext()
-    print(direction)
     if direction % 2 == 0 then
         turtle.turnLeft()
     else
@@ -224,7 +223,16 @@ function doRoutine()
     checkSaplings()
     while true do
         turtle.select(1)
-        move.fd(3)
+        if not move.fd(3) then
+            bol, value = turtle.inspect()
+            if value.name == "minecraft:leaves" then
+                for i=1, 3 do
+                    turtle.select(13)
+                    turtle.dig()
+                    move.fd(1)
+                end
+            end
+        end
         while not turtle.compare() do
             checkTreeName()
             if wifi == true then
