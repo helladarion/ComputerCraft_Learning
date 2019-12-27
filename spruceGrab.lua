@@ -69,27 +69,30 @@ function checkSaplings()
         -- Check if they are the right type of sapplings
         prev_slot = turtle.getSelectedSlot()
         if turtle.getItemDetail(15).name == "minecraft:sapling" then
+            move.up(1)
             turtle.select(15)
-            turtle.place()
-            bol, value = turtle.inspect()
+            turtle.placeDown()
+            bol, value = turtle.inspectDown()
             if value.state.type == "spruce" then
                 print("All good we have the right type of sapling")
                 if wifi == true then
                     rednet.send(listen_computerId, "All good we have the right type of sapling", "spruceGrab")
                 end
                 -- getting the sappling back
-                turtle.dig()
+                turtle.digDown()
                 -- switching back to the previous slot
                 turtle.select(prev_slot)
+                move.dn(1)
            else
                 print("That is not the right type of sapling")
                 if wifi == true then
                     rednet.send(listen_computerId, "That is not the right type of sapling", "spruceGrab")
                 end
                 -- getting the sappling back
-                turtle.dig()
+                turtle.digDown()
                 -- switching back to the previous slot
                 turtle.select(prev_slot)
+                move.dn(1)
                 -- Exiting
                 error()
             end
@@ -102,6 +105,41 @@ function checkSaplings()
             error()
         end
     end
+end
+
+function moveSuckItems(qtt)
+    for i=1, qtt do
+        turtle.select(15)
+        turtle.suck()
+        if not move.fd(1) then
+            turtle.select(12)
+            turtle.dig()
+            move.fd(1)
+        end
+    end
+end
+
+function suckSaplings()
+    turtle.turnRight()
+    lap=2
+    for x=1, 3 do
+        for i=1, 4 do
+            if i == 1 then
+                moveSuckItems(x + (lap - 1))
+            else
+                moveSuckItems(x + lap)
+            end
+            if i < 4 then
+                turtle.turnLeft()
+            else
+                moveSuckItems(1)
+                turtle.turnLeft()
+            end
+        end
+        lap = lap + 1
+    end
+    move.fd(3)
+    turtle.turnLeft()
 end
 
 
@@ -203,7 +241,15 @@ function doRoutine()
         end
         cutit()
         plant()
-        move.bk(3)
+        if turtle.getItemCount(15) < 30 then
+            print("We have less than 30 saplings on our inventory, starting sapling collection")
+            if wifi == true then
+                rednet.send(listen_computerId, "We have less than 30 saplings on our inventory, starting sapling collection", "spruceGrab")
+            end
+            suckSaplings()
+        else
+            move.bk(3)
+        end
         sleep(60)
     end
 end
