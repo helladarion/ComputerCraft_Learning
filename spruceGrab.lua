@@ -219,6 +219,13 @@ function checkTreeName()
 end
 
 function doRoutine()
+    -- Removing any leaves from the top of the turtle
+    if turtle.detectUp() then
+        turtle.select(12)
+        turtle.digUp()
+        turtle.dropUp()
+        turtle.select(1)
+    end
     checkLogType()
     checkSaplings()
     while true do
