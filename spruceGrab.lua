@@ -7,6 +7,55 @@ end
 listen_computerId=5
 direction=0
 
+function checkLogType()
+    n_logs = turtle.getItemCount(1)
+    if n_logs < 1 then
+        print("We need at least one spruce wood on slot 1")
+        if wifi == true then
+            rednet.send(listen_computerId, "We need at least one spruce wood on slot 1", "spruceGrab")
+        end
+        -- Exiting
+        error()
+    else
+        -- Checking first if it a minecraft log
+        if turtle.getItemDetail(1).name == "minecraft:log" then
+            print("We do have a log on the slot 1")
+            if wifi == true then
+                rednet.send(listen_computerId, "We do have a log on the slot 1", "spruceGrab")
+            end
+            -- Checking what type it is
+            print("Checking log type")
+            if wifi == true then
+                rednet.send(listen_computerId, "Checking log type", "spruceGrab")
+            end
+            turtle.select(1)
+            turtle.placeUp()
+            bol, value = turtle.inspectUp()
+            if value.state.variant == "spruce" then
+                print("We have a spruce log in place we are good to go")
+                if wifi == true then
+                    rednet.send(listen_computerId, "We have a spruce log in place we are good to go", "spruceGrab")
+                end
+                turtle.digUp()
+            else
+                print("We NEED a spruce log on slot 1 to continue")
+                if wifi == true then
+                    rednet.send(listen_computerId, "We NEED a spruce log on slot 1 to continue", "spruceGrab")
+                end
+                -- Exiting
+                error()
+            end
+        else
+            print("We need at least one spruce log on slot 1")
+            if wifi == true then
+                rednet.send(listen_computerId, "We need at least one spruce log on slot 1", "spruceGrab")
+            end
+            -- Exiting
+            error()
+        end
+    end
+end
+
 function cutit()
     turtle.select(1)
     turtle.dig()
@@ -83,6 +132,7 @@ function checkTreeName()
 end
 
 function doRoutine()
+    checkLogType()
     while true do
         turtle.select(1)
         move.fd(3)
