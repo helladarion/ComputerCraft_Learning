@@ -77,11 +77,19 @@ function checkSaplings()
                 if wifi == true then
                     rednet.send(listen_computerId, "All good we have the right type of sapling", "spruceGrab")
                 end
+                -- getting the sappling back
+                turtle.dig()
+                -- switching back to the previous slot
+                turtle.select(prev_slot)
            else
                 print("That is not the right type of sapling")
                 if wifi == true then
                     rednet.send(listen_computerId, "That is not the right type of sapling", "spruceGrab")
                 end
+                -- getting the sappling back
+                turtle.dig()
+                -- switching back to the previous slot
+                turtle.select(prev_slot)
                 -- Exiting
                 error()
             end
