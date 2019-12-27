@@ -1,4 +1,5 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
+os.loadAPI("/ComputerCraft_Learning/time.lua")
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
     print("Openned Wifi on the left side")
@@ -219,36 +220,42 @@ function checkTreeName()
 end
 
 function doRoutine()
-    -- Removing any leaves from the top of the turtle
-    if turtle.detectUp() then
-        turtle.select(12)
-        turtle.digUp()
-        turtle.dropUp()
-        turtle.select(1)
-    end
     checkLogType()
     checkSaplings()
     while true do
+        -- Removing any leaves from the top of the turtle
+        if turtle.detectUp() then
+            turtle.select(12)
+            turtle.digUp()
+            turtle.dropUp()
+        end
         turtle.select(1)
         if not move.fd(3) then
-            bol, value = turtle.inspect()
-            if value.name == "minecraft:leaves" then
+            bolee, value_l = turtle.inspect()
+            if value_l.name == "minecraft:leaves" then
                 for i=1, 3 do
                     turtle.select(13)
                     turtle.dig()
                     move.fd(1)
                 end
+                turtle.dropUp()
+                turtle.select(1)
             end
         end
+        turtle.select(1)
         while not turtle.compare() do
             checkTreeName()
             if wifi == true then
                 rednet.send(listen_computerId, "Checking "..tree.." tree", "spruceGrab")
             end
+            if not turtle.inspect() then
+                plant()
+            end
             move.bk(3)
             checkNext()
-            sleep(60)
+            time.wait(1)
             move.fd(3)
+            turtle.select(1)
         end
         checkTreeName()
         if wifi == true then
@@ -265,7 +272,7 @@ function doRoutine()
         else
             move.bk(3)
         end
-        sleep(60)
+        time.wait(1)
     end
 end
 
