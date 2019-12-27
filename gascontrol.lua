@@ -4,6 +4,7 @@ function checkFuel()
         turtle.select(16)
         while not turtle.refuel(1) do
             print("Please insert fuel on slot 16")
+            sleep(2)
         end
         print("Refueled! Fuel level at "..turtle.getFuelLevel())
         turtle.select(1)

@@ -183,6 +183,7 @@ end
 
 function doRoutine()
     checkLogType()
+    checkSaplings()
     while true do
         turtle.select(1)
         move.fd(3)
