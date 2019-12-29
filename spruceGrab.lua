@@ -253,7 +253,7 @@ function doRoutine()
             end
             move.bk(3)
             checkNext()
-            time.wait(3)
+            time.wait(1)
             move.fd(3)
             turtle.select(1)
         end
