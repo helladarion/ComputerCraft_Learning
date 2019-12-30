@@ -4,6 +4,11 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     print("Openned Wifi on the left side")
     wifi=true
 end
+listen_computerId=5
+
+-- Torches on 15
+-- crafting table on 14
+-- 2 chests on 13
 
 depth = { ... }
 if #depth < 1 then
@@ -12,7 +17,7 @@ if #depth < 1 then
 end
 
 if wifi == true then
-    rednet.send(5,"Doing stairs for "..depth[1].." depth")
+    rednet.send(listen_computerId,"Doing stairs for "..depth[1].." depth")
 end
 
 function cutSides()
@@ -33,6 +38,7 @@ function torchit()
 end
 
 function goDownStairs()
+    turtle.select(1)
     for i = 1, depth[1] do
         turtle.digDown()
         move.dn(1)
@@ -48,7 +54,7 @@ function goDownStairs()
         move.dn(1)
         if i % 5 == 0 then
             if wifi == true then
-                rednet.send(5,"Torching it at "..i.." depth","stairs_info")
+                rednet.send(listen_computerId,"Torching it at "..i.." depth","stairs")
             end
             torchit()
         end
@@ -69,8 +75,60 @@ function load_file(name)
     return data
 end
 
+-- Chest Section
+
+function prepareInventory()
+    -- we need to store the items
+    -- we could create a chest, but I'm not really sure about that yet - NOPE we need a clean inventory to craft anything
+    -- we could also move the items to the side, and remove the trash, dirt, and not coblestone and ores - NOPE that doesn't work
+    local black_list = {"minecraft:stone", "minecraft:dirt"}
+    -- We need to place the chest on top and fill it with the items, but we can also remove the trash.
+    if turtle.getItemDetail(14) == "minecraft:diamond_pickaxe" then
+        -- swap the crafting table with the picaxe
+        turtle.equipRight()
+    end
+    turtle.turnLeft()
+    sleep(2)
+    turtle.dig()
+    turtle.select(13)
+    turtle.place(1)
+    turtle.placeUp(1)
+    turtle.select(14)
+    turtle.equipRight()
+    for i=1, 16 do
+        for _,v in ipairs(black_list) do
+            print(i.." and "..v)
+            if turtle.getItemCount(i) > 0 and turtle.getItemDetail(i).name == v then
+                turtle.select(i)
+                turtle.dropDown()
+            elseif turtle.getItemCount(i) > 0 and turtle.getItemDetail(i).name == "minecraft:cobblestone" then
+                -- store cobblestone on the left chest
+                turtle.select(i)
+                turtle.drop()
+            end
+        end
+        -- store all other items
+        turtle.select(i)
+        turtle.dropUp()
+    end
+    --turtle.turnRight()
+end
+
+chest = {1,2,3,5,7,9,10,11}
+stairs = {1,5,6,9,10,11}
 -- Make the necessary number of stairs, checking the resources necessary
-function createStuff(qtt)
+function createStuff(qtt, what)
+   -- checking if we have a crafting table on slot 14
+   --if turtle.getItemDetail(14) == "minecraft:crafting_table" then
+   --    -- swap the crafting table with the picaxe
+   --    turtle.equipRight()
+   --else
+   --    print("We need a crafting table on slot 14 in order to craft stairs")
+   --     if wifi == true then
+   --         rednet.send(listen_computerId, "We need a crafting table on slot 14 in order to craft stairs", "stairs")
+   --     end
+   --    error()
+   --end
    if qtt <= 4 then
        total_stairs = 1
    else
@@ -84,20 +142,18 @@ function createStuff(qtt)
        howManyTimes = howManyTimes + 1
    end
 
-   chest = {1,2,3,5,7,9,10,11}
-   stairs = {1,5,6,9,10,11}
    for i=1, howManyTimes do
       if howManyTimes > 1 and howManyTimes ~= i then
          currentValue = 10
          turtle.select(13)
-         turtle.suckUp(60)
+         turtle.suck(60)
       else
          currentValue = leftover
          turtle.select(13)
-         turtle.suckUp(leftover*6)
+         turtle.suck(leftover*6)
       end
 
-      for _,v in ipairs(stairs) do
+      for _,v in ipairs(what) do
           turtle.select(13)
           turtle.transferTo(v,currentValue)
       end
@@ -105,8 +161,65 @@ function createStuff(qtt)
    turtle.craft(total_stairs)
 end
 
---createStuff(tonumber(depth[1]))
+function getItemsBack()
+    while turtle.suckUp() do
+        --nothing here, only sucking up the items back
+    end
+    while turtle.suck() do
+        -- nothing here, only sucking up the items back
+    end
+    -- find an empty spot
+    for i=1, 16 do
+        if turtle.getItemCount(i) > 0 and  turtle.getItemDetail(i).name == "minecraft:diamond_pickaxe" then
+            turtle.select(i)
+            turtle.equipRight()
+            break
+        end
+    end
+    --getting the chests back
+    turtle.dig()
+    turtle.digUp()
+    for i=1, 16 do
+        if turtle.getItemCount(i) == 0 then
+            swap_spot = i
+            break
+        end
+    end
+    if not swap_spot then
+        print("We have no empty spots, getting rid of some cobblestone")
+        for x=1, 16 do
+            if turtle.getItemDetail(x).name == "minecraft:cobblestone" then
+                turtle.select(x)
+                turtle.dropDown()
+                swap_spot = x
+                break
+            end
+        end
+    end
+    starting_items = {[16] = "minecraft:coal", [15] = "minecraft:torch", [14] = "minecraft:crafting_table", [13] = "minecraft:chest"}
+    for y=1, 16 do
+        for k,v in pairs(starting_items) do
+            --print(k..": "..v)
+            if turtle.getItemCount(y) > 0 and turtle.getItemDetail(y).name == v  and k ~= y then
+                turtle.select(k)
+                turtle.transferTo(swap_spot)
+                turtle.select(y)
+                turtle.transferTo(k)
+                swap_spot = y
+                break
+            end
+        end
+    end
+    turtle.turnRight()
+end
+
+goDownStairs()
+prepareInventory()
+createStuff(tonumber(depth[1]), stairs)
+getItemsBack()
+
 function placeStairs(qtt)
+    -- find the stairs slot(s)
     for i=1, qtt do
         turtle.dig()
         turtle.select(13)
