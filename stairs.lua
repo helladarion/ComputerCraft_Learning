@@ -11,8 +11,9 @@ listen_computerId=5
 -- 2 chests on 13
 
 depth = { ... }
-if #depth < 1 then
+if #depth < 1  or #depth > 64 then
     print("Usage: stairs <depth>")
+    print("We can only make <depth> until 64")
     return
 end
 
@@ -145,16 +146,16 @@ function createStuff(qtt, what)
    for i=1, howManyTimes do
       if howManyTimes > 1 and howManyTimes ~= i then
          currentValue = 10
-         turtle.select(13)
+         turtle.select(12)
          turtle.suck(60)
       else
          currentValue = leftover
-         turtle.select(13)
+         turtle.select(12)
          turtle.suck(leftover*6)
       end
 
       for _,v in ipairs(what) do
-          turtle.select(13)
+          turtle.select(12)
           turtle.transferTo(v,currentValue)
       end
    end
@@ -196,7 +197,7 @@ function getItemsBack()
             end
         end
     end
-    starting_items = {[16] = "minecraft:coal", [15] = "minecraft:torch", [14] = "minecraft:crafting_table", [13] = "minecraft:chest"}
+    starting_items = {[16] = "minecraft:coal", [15] = "minecraft:torch", [14] = "minecraft:crafting_table", [13] = "minecraft:chest", [12] = "minecraft:stone_stairs"}
     for y=1, 16 do
         for k,v in pairs(starting_items) do
             --print(k..": "..v)
@@ -213,29 +214,33 @@ function getItemsBack()
     turtle.turnRight()
 end
 
+function placeStairs(qtt)
+    turtle.turnRight()
+    turtle.turnRight()
+    move.fd(1)
+    for i=1, qtt do
+        turtle.dig()
+        turtle.select(12)
+        turtle.place()
+        move.up(1)
+        move.fd(1)
+        --checkQtt()
+    end
+    move.fd(3)
+    turtle.turnRight()
+    turtle.turnRight()
+end
+
+--function checkQtt()
+--    if turtle.getItemCount(12) < 2 then
+--        turtle.select(14)
+--        turtle.transferTo(13)
+--        turtle.select(13)
+--    end
+--end
+
 goDownStairs()
 prepareInventory()
 createStuff(tonumber(depth[1]), stairs)
 getItemsBack()
-
-function placeStairs(qtt)
-    -- find the stairs slot(s)
-    for i=1, qtt do
-        turtle.dig()
-        turtle.select(13)
-        turtle.place()
-        move.up(1)
-        move.fd(1)
-        checkQtt()
-    end
-end
-
-function checkQtt()
-    if turtle.getItemCount(13) < 2 then
-        turtle.select(14)
-        turtle.transferTo(13)
-        turtle.select(13)
-    end
-end
-
 placeStairs(tonumber(depth[1]))
