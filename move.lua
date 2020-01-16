@@ -10,10 +10,15 @@ function up(qtde)
     return true
 end
 
-function fd(qtde)
+function fd(qtde, destroy)
+    destroy = destroy or false
     for i=1, qtde do
         gascontrol.checkFuel()
         if not turtle.forward() then
+            if destroy then
+                turtle.dig()
+                turtle.forward()
+            end
             return turtle.forward()
         end
     end

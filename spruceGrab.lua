@@ -30,6 +30,9 @@ function checkLogType()
                 rednet.send(listen_computerId, "Checking log type", "spruceGrab")
             end
             turtle.select(1)
+            if turtle.detectUp() then
+                turtle.digUp()
+            end
             turtle.placeUp()
             bol, value = turtle.inspectUp()
             if value.state.variant == "spruce" then
@@ -202,7 +205,7 @@ function checkNext()
     else
         turtle.turnRight()
     end
-    move.fd(11)
+    move.fd(11,true)
     if direction % 2 == 0 then
         turtle.turnRight()
     else

@@ -98,7 +98,7 @@ function prepareInventory()
     turtle.equipRight()
     for i=1, 16 do
         for _,v in ipairs(black_list) do
-            print(i.." and "..v)
+            --print(i.." and "..v)
             if turtle.getItemCount(i) > 0 and turtle.getItemDetail(i).name == v then
                 turtle.select(i)
                 turtle.dropDown()
