@@ -1,6 +1,5 @@
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
-    print("Openned Wifi on the left side")
     wifi=true
 end
 listen_computerId=5

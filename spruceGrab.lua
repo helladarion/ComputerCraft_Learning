@@ -1,5 +1,6 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
 os.loadAPI("/ComputerCraft_Learning/time.lua")
+os.loadAPI("/ComputerCraft_Learning/check_basics.lua")
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
     print("Openned Wifi on the left side")
@@ -7,6 +8,8 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
 end
 listen_computerId=5
 direction=0
+
+start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:sapling",8}, [1] = {"minecraft:log",1}}
 
 function checkLogType()
     n_logs = turtle.getItemCount(1)
@@ -279,5 +282,6 @@ function doRoutine()
     end
 end
 
+check_basics.checkBasicSetup(start_items)
 doRoutine()
 
