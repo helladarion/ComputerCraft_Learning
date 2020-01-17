@@ -1,18 +1,20 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
+os.loadAPI("/ComputerCraft_Learning/check_basics.lua")
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
     print("Openned Wifi on the left side")
     wifi=true
 end
-channel=2
+channel=5
 turtle.select(1)
 
+start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:torch",30}, [14] = {"minecraft:chest",2}}
 -- coal on 16
 -- torches on 15
 -- 2 chests on 14
 params = { ... }
 if #params < 1 then
-    print("Usage: mine_shaft <distance>")
+    print("Usage: mine_shaft <distance> <r> or <l> for right or left")
     return
 end
 
@@ -104,13 +106,15 @@ function doTheWork()
     end
 end
 
+check_basics.checkBasicSetup(start_items)
+
 for i=1, 2 do
     doTheWork()
     turtle.select(14)
     turtle.placeUp()
     -- cleaning turtle
-    for i=1,13 do 
-        tutle.dropUp()
+    for i=1,13 do
+        turtle.dropUp()
     end
 end
 
