@@ -16,8 +16,16 @@ listen_computerId=5
 -- 6. Put the item on the correct chest, and if that is the first item of that kind or we have a full chest, create e new one and place it.
 -- 7. One option would be to create trap chests to put them side by site, and create a corridor of single chests. Creating a multi-dimension-array or Matrix
 -- 7b. Another option would be to create a North, South, East, West approach, with a tower of chests with a hole in the middle, where the turtle could access.
--- Learn how to craft wooden planks
--- Learn how to craft chest
+-- database = {
+--  turtle_starter_facing = 2
+--  item_name = "minecraft.itemname",
+--  qtt = qtt of the item
+--  space_left = space_left of the chest 27 slots minus qtt
+--  shelf_position = {N,N,N,W,W,W}
+--  chest_position = {pos=north, hight=1}
+-- }
+-- Learn how to craft wooden planks - DONE
+-- Learn how to craft chest - DONE
 -- create a save load mechanism to store the location, type, amount of each item.
 -- It can also stock the charcoal, and provide it to other turtles.
 
@@ -34,6 +42,28 @@ function load_file(name)
     local data = file.readAll()
     file.close()
     return data
+end
+
+function getStarterFacingDirection()
+    --We need to check if we have this information saved, and if not just save it.
+    --place a chest, inspect, swapFacing and save the facing info
+    --set a number for facing instead of a string, 0,1,2,3 or 1,2,3,4
+end
+
+function updateFacing(rotate_dir)
+    --auxiliar function for rotate the turtle, and get the new facing
+end
+
+function swapFacing(face)
+    if face == "north" then
+        return "south"
+    elseif face == "south" then
+        return "north"
+    elseif face == "west" then
+        return "east"
+    elseif face == "east" then
+        return "west"
+    end
 end
 
 planks = {
@@ -111,6 +141,8 @@ function createStuff(qtt, what)
    putItemOnSlot(13)
    getItemsBack()
 end
+
+
 
 getItemsBack()
 check_basics.checkBasicSetup(start_items)
