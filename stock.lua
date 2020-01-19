@@ -36,8 +36,16 @@ function load_file(name)
     return data
 end
 
-planks = {[1] = {1}}
-chest = {[2] = {1,2,3,5,7,9,10,11}}
+planks = {
+    name = "minecraft:planks",
+    components = {[1] = {1}}
+}
+chest = {
+    name = "minecraft:chest",
+    requires = {planks.components, qtt = 2},
+    components = {[2] = {1,2,3,5,7,9,10,11}}
+}
+
 function prepareToCraft(number_needed)
     -- Place chest on top
     turtle.select(15)
@@ -58,32 +66,52 @@ function getItemsBack()
     check_basics.checkBasicSetup(start_items)
 end
 
+function putItemOnSlot(slot)
+   for i=1, 16 do
+       if turtle.getItemCount(i) > 0 then
+           turtle.select(i)
+           turtle.transferTo(slot)
+           turtle.select(1)
+           break
+       end
+   end
+end
+
 function createStuff(qtt, what)
    prepared = false
-   for n,v in pairs(what) do
+   if what.requires then
+       dothis = what.requires[1]
+       req_qtt = what.requires.qtt
+   else
+       req_qtt = qtt
+   end
+   for n,v in pairs(dothis) do
        if not prepared then
-           total_needed = n * qtt
+           total_needed = (n * req_qtt) * qtt
            prepareToCraft(total_needed)
            prepared = true
        end
        for _,pos in pairs(v) do
            turtle.select(14) --slot where we want the planks to be at
-           turtle.transferTo(pos,qtt)
+           turtle.transferTo(pos,total_needed)
        end
    end
-   turtle.craft(qtt)
+   turtle.craft(total_needed)
    -- put results on slot 13
-   for i=1, 12 do
-       if turtle.getItemCount(i) > 0 then
-           turtle.select(i)
-           turtle.transferTo(13)
-           turtle.select(1)
-           break
+   putItemOnSlot(13)
+   if what.requires then
+       for n,v in pairs(what.components) do
+           for _,pos in pairs(v) do
+               turtle.select(13)
+               turtle.transferTo(pos,qtt)
+           end
        end
+       turtle.craft(qtt)
    end
+   putItemOnSlot(13)
    getItemsBack()
 end
 
 getItemsBack()
 check_basics.checkBasicSetup(start_items)
-createStuff(2,planks)
+createStuff(1,chest)
