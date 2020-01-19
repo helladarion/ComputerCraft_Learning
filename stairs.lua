@@ -63,27 +63,13 @@ function goDownStairs()
         move.dn(1)
     end
 end
-
-function save_file(text,name)
-    local file = fs.open(name,"w")
-    file.write(text)
-    file.close()
-end
-
-function load_file(name)
-    local file = fs.open(name,"r")
-    local data = file.readAll()
-    file.close()
-    return data
-end
-
 -- Chest Section
 
 function prepareInventory()
     -- we need to store the items
     -- we could create a chest, but I'm not really sure about that yet - NOPE we need a clean inventory to craft anything
     -- we could also move the items to the side, and remove the trash, dirt, and not coblestone and ores - NOPE that doesn't work
-    local black_list = {"minecraft:stone", "minecraft:dirt"}
+    local black_list = {"minecraft:stone", "minecraft:dirt", "minecraft:gravel"}
     -- We need to place the chest on top and fill it with the items, but we can also remove the trash.
     if turtle.getItemDetail(14) == "minecraft:diamond_pickaxe" then
         -- swap the crafting table with the picaxe
