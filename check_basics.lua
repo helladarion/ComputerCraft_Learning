@@ -3,7 +3,7 @@ function groupSimilar()
         if turtle.getItemCount(i) > 0  and turtle.getItemCount(i) < 64 then
             itemID = turtle.getItemDetail(i).name
             for x=1, 16 do
-                if turtle.getItemCount(x) > 0 and turtle.getItemCount(x) < 64 and  x ~= i and turtle.getItemDetail(x).name ==  itemID then
+                if turtle.getItemCount(x) > 0 and turtle.getItemCount(x) < 64 and  x ~= i and turtle.getItemDetail(x).name ==  itemID and turtle.getItemDetail(x).name ~= "minecraft:chest" then
                     turtle.select(i)
                     turtle.transferTo(x)
                     break
@@ -14,7 +14,7 @@ function groupSimilar()
 end
 
 --start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:torch",10}, [14] = {"minecraft:crafting_table",1}, [13] = {"minecraft:chest",2}}
-function checkBasicSetup(start_items)
+function checkBasicSetup(start_items, on_hold)
     groupSimilar()
     local allgood = true
     for i=1, 16 do
@@ -41,7 +41,13 @@ function checkBasicSetup(start_items)
                 turtle.select(k)
                 turtle.transferTo(swap_spot)
                 turtle.select(y)
-                turtle.transferTo(k)
+                if on_hold ~= nil then
+                   qtde_item = on_hold[k]
+                   print(qtde_item, k)
+                   turtle.transferTo(k,qtde_item)
+                else
+                    turtle.transferTo(k)
+                end
                 swap_spot = y
                 found = true
                 break

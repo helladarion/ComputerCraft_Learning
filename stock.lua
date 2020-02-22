@@ -32,9 +32,10 @@ listen_computerId=5
 -- create a save load mechanism to store the location, type, amount of each item.
 -- It can also stock the charcoal, and provide it to other turtles.
 
-start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:chest",1}, [14] = {"minecraft:log",10}}
+start_items = {[16] = {"minecraft:coal",1}, [15] = {"minecraft:chest",1}, [14] = {"minecraft:log",2}}
 database = "items_db.json"
-number_of_silos = 4
+number_of_silos = 4 --Tower locations
+number_of_layers = 4 --hight of the tower
 
 function save_exists(name)
     local f=io.open(name,"r")
@@ -102,6 +103,13 @@ chest = {
 }
 
 function prepareToCraft(number_needed)
+    -- handling similar items
+    -- items on slots 14, 15 and 16
+    local on_hold_items = {
+        [14] = turtle.getItemCount(14) - 2,
+        [15] = turtle.getItemCount(15),
+        [16] = turtle.getItemCount(16)
+    }
     -- Place chest on top
     turtle.select(15)
     turtle.placeUp()
@@ -115,21 +123,27 @@ function prepareToCraft(number_needed)
     -- keep necessary number of items on slot 14
     turtle.select(14)
     turtle.dropUp(turtle.getItemCount() - number_needed)
+    return on_hold_items
 end
 
-function getItemsBack()
+function getItemsBack(on_hold)
     while turtle.suckUp() do
         -- getting items back
     end
     turtle.digUp()
-    check_basics.checkBasicSetup(start_items)
+    check_basics.checkBasicSetup(start_items, on_hold)
 end
 
-function putItemOnSlot(slot)
+function putItemOnSlot(slot, qtt)
    for i=1, 16 do
        if turtle.getItemCount(i) > 0 then
            turtle.select(i)
-           turtle.transferTo(slot)
+           if qtt ~= nil then
+                turtle.transferTo(slot, qtt)
+           else
+               print("Sending items to "..slot)
+                turtle.transferTo(slot)
+           end
            turtle.select(1)
            break
        end
@@ -147,10 +161,14 @@ function createStuff(qtt, what)
    for n,v in pairs(dothis) do
        if not prepared then
            total_needed = (n * req_qtt) * qtt
-           prepareToCraft(total_needed)
+           items_on_hold = prepareToCraft(total_needed)
            prepared = true
        end
        for _,pos in pairs(v) do
+           while turtle.getItemCount(14) < total_needed do
+               print("We need "..total_needed.." "..start_items[14][1].." on slot 14" )
+               sleep(10)
+           end
            turtle.select(14) --slot where we want the planks to be at
            turtle.transferTo(pos,total_needed)
        end
@@ -167,8 +185,8 @@ function createStuff(qtt, what)
        end
        turtle.craft(qtt)
    end
-   putItemOnSlot(13)
-   getItemsBack()
+   putItemOnSlot(13, qtt)
+   getItemsBack(items_on_hold)
 end
 
 function add_item()
@@ -195,6 +213,11 @@ function add_item()
     db_data.items[item].qtt = tonumber(current_items) + tonumber(turtle.getItemDetail().count)
     if db_data.items[item].location == nil then
         print("We don't have a storage location for this one")
+        -- check if we have enough resources to make this one
+        while turtle.getItemCount(14) < (start_items[14][2] + 2) do
+            print("We need more "..start_items[14][1].." to continue")
+            sleep(10)
+        end
         silo,layer,chestk = checkFreeChest()
         db_data.items[item].location = {silo, layer, chestk}
         --print(db_data.storage[silo].layer[layer])
@@ -235,6 +258,12 @@ function storeItem(new_c, s, l, c)
     turtle.place()
     turtle.select(1)
     turtle.drop()
+    if turtle.getItemCount(13) > 0 then
+        -- putting the created chest on the starter spot
+        turtle.select(13)
+        turtle.transferTo(15)
+        turtle.select(1)
+    end
     while tonumber(db_data.facing.current) ~= tonumber(saved_facing) do
         updateFacing("r")
     end
@@ -242,11 +271,16 @@ function storeItem(new_c, s, l, c)
 end
 
 function checkFreeChest()
+    --local sort_func = function(a, b) return a < b end
     local count_layers = 0
     for silo, vsilo in pairs(db_data.storage) do
-        --print("Checking Silo: "..silo) -- List of all Silos
-        for layer,vlayer  in pairs(vsilo.layer) do
-            --print(layer,vlayer)
+        print("Checking Silo: "..silo) -- List of all Silos
+        --table.sort(vsilo.layer, sort_func)
+        for l=1,number_of_layers do
+             layer = "l"..l
+             vlayer = vsilo.layer[layer]
+        --for layer,vlayer in pairs(vsilo.layer) do
+             --print(layer,vlayer)
             for chestk, vchest in pairs(vlayer) do
                 --print(chestk, vchest)
                 if not vchest.used then
@@ -318,16 +352,16 @@ function createBaseSilos(db_data,qtt)
         if i < 3 then
             mainDist = "bbb"
         elseif i >= 3 and i < 5 then
-            mainDist = "bbbbbb"
+            mainDist = "bbbbbbb"
         elseif i >= 5 and i < 7 then
-            mainDist = "bbbbbbbbb"
+            mainDist = "bbbbbbbbbb"
         elseif i >= 7 and i < 9 then
-            mainDist = "bbbbbbbbbbbb"
+            mainDist = "bbbbbbbbbbbbb"
         elseif i >= 9 then
-            mainDist = "bbbbbbbbbbbbbbb"
+            mainDist = "bbbbbbbbbbbbbbbb"
         end
         db_data.storage["silo"..i] = {path = mainDist..""..direction.."fff", layer = {}}
-        for lay=1,4 do
+        for lay=1,number_of_layers do
             db_data.storage["silo"..i].layer["l"..lay] = {}
             for cap=1,4 do
                 db_data.storage["silo"..i].layer["l"..lay]["chest"..cap] = { used = false, total_capacity = 27 * 64, current_used = 0 }
@@ -363,26 +397,67 @@ function getStarterFacingDirection()
        db_data.facing.current = swapFacing(starter_dir)
        --create the base chest
        createStuff(1,chest)
-       turtle.select(15)
+       if turtle.getItemCount(13) > 0 then 
+           turtle.select(13)
+       else
+           turtle.select(15)
+       end
        turtle.place()
        createBaseSilos(db_data,number_of_silos)
        save_file(db_data,database)
+       -- getting the chest back to starter slot
+       if turtle.getItemCount(2) > 0 then
+           turtle.select(2)
+           turtle.transferTo(15)
+           turtle.select(1)
+       end
        return db_data
     end
 end
 
+function list_items()
+    -- temporarily remove crafting table
+    local mon
+    local function findMonitor()
+        for i, v in pairs(rs.getSides()) do
+            if peripheral.getType(v) == "monitor" then
+                mon = peripheral.wrap(v)
+                return
+            end
+        end
+        error("No monitor found")
+    end
+    --mon.write("Test")
+    findMonitor()
+    mon.clear()
+    mon.setTextScale(0.5)
+    mon.setCursorPos(1,1)
+    for mkey, mvalue in pairs(db_data.items) do
+        mon.write(mkey..": "..mvalue.qtt)
+        local _, y = mon.getCursorPos()
+        mon.setCursorPos(1,y+1)
+        --print(key..": "..value.qtt)
+    end
+    --turtle.equipRight()
+end
+
 check_basics.checkBasicSetup(start_items)
-db_data = getStarterFacingDirection()
 while true do
+    if turtle.getItemCount(16) < 1 then
+        print("We need more coal to continue, skiping this run")
+        error()
+    end
+    db_data = getStarterFacingDirection()
     checkChest()
-    sleep(3)
+    list_items()
+    sleep(10)
 end
 
 
---siloToGo = "silo4"
---
---walkPath(db_data.storage[siloToGo].path)
----- do the storage of the item here
---sleep(10)
---walkPath(reversePathToSilo(siloToGo))
-
+-- TODO: Develop retrieve system.
+-- List all items on a side monitor - DONE
+-- show info on the monitor about the last item stored
+-- work on a better layout to display items.
+-- check for limit reached for items, create a new chest
+-- when retrieving items, if we have more than one chest with the same item, prefer to remove from the less full one, and if it gets empty remove it, and mark the spot as empty for that silo.
+-- lucianotop344 idea, make a list of the most common items and create a different kind of storage (with hoppers) for them.
