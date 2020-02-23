@@ -229,6 +229,10 @@ function doRoutine()
     checkLogType()
     checkSaplings()
     while true do
+        while turtle.getItemCount(16) < 1 do
+            print("Not doing this run, we need more coal on stot 16")
+            sleep(30)
+        end
         -- Removing any leaves from the top of the turtle
         if turtle.detectUp() then
             turtle.select(12)
