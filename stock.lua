@@ -270,6 +270,37 @@ function storeItem(new_c, s, l, c)
     move.dn(layer)
 end
 
+function retrieveItems(item, qtt)
+    --if item == nil or qtt == nil then
+    --    error("You must specify the number of the item and the amount")
+    --end
+    listRetrieve = list_items()
+    print("You want "..qtt.." of "..listRetrieve[item])
+    local siloR,layerR,chestR = unpack(db_data.items[listRetrieve[item]].location)
+    walkPath(db_data.storage[siloR].path)
+    local layer = string.gsub(layerR, "l", "")
+    local chest_number = string.gsub(chestR, "chest", "")
+    move.up(layer)
+    local saved_facing = db_data.facing.current
+    while tonumber(db_data.facing.current) ~= tonumber(chest_number) do
+        updateFacing("r")
+    end
+    -- Get the items as described and update the database
+    turtle.select(1)
+    turtle.suck(qtt)
+    --update number of items on the item list
+    db_data.items[listRetrieve[item]].qtt = tonumber(db_data.items[listRetrieve[item]].qtt) - tonumber(qtt)
+    -- update number of items on the chest from silo
+    local current_items = db_data.storage[siloR].layer[layerR][chestR].current_used
+    db_data.storage[siloR].layer[layerR][chestR].current_used = tonumber(current_items) - tonumber(qtt)
+    while tonumber(db_data.facing.current) ~= tonumber(saved_facing) do
+        updateFacing("r")
+    end
+    move.dn(layer)
+    walkPath(reversePathToSilo(siloR))
+    save_file(db_data,database)
+    list_items()
+end
 function checkFreeChest()
     --local sort_func = function(a, b) return a < b end
     local count_layers = 0
@@ -415,44 +446,53 @@ function getStarterFacingDirection()
     end
 end
 
+function findMonitor()
+    for i, v in pairs(rs.getSides()) do
+        if peripheral.getType(v) == "monitor" then
+            mon = peripheral.wrap(v)
+            return mon
+        end
+    end
+    error("No monitor found")
+end
+
 function list_items()
     -- temporarily remove crafting table
-    local mon
-    local function findMonitor()
-        for i, v in pairs(rs.getSides()) do
-            if peripheral.getType(v) == "monitor" then
-                mon = peripheral.wrap(v)
-                return
-            end
-        end
-        error("No monitor found")
-    end
-    --mon.write("Test")
-    findMonitor()
+    local mon = findMonitor()
     mon.clear()
     mon.setTextScale(0.5)
     mon.setCursorPos(1,1)
+    local itemNumber = 1
+    local itemRequestTable = {}
     for mkey, mvalue in pairs(db_data.items) do
-        mon.write(mkey..": "..mvalue.qtt)
+        mon.write("["..itemNumber.."] "..mkey..": "..mvalue.qtt)
         local _, y = mon.getCursorPos()
         mon.setCursorPos(1,y+1)
-        --print(key..": "..value.qtt)
+        --print(mvalue.name)
+        table.insert(itemRequestTable, mkey)
+        itemNumber = itemNumber + 1
     end
     --turtle.equipRight()
+    return itemRequestTable
+end
+
+function doRoutine()
+    while true do
+        if turtle.getItemCount(16) < 1 then
+            print("We need more coal to continue, skiping this run")
+            error()
+        end
+        db_data = getStarterFacingDirection()
+        checkChest()
+        list_items()
+        sleep(10)
+    end
 end
 
 check_basics.checkBasicSetup(start_items)
-while true do
-    if turtle.getItemCount(16) < 1 then
-        print("We need more coal to continue, skiping this run")
-        error()
-    end
-    db_data = getStarterFacingDirection()
-    checkChest()
-    list_items()
-    sleep(10)
-end
-
+doRoutine()
+--db_data = getStarterFacingDirection()
+retrieveItems(2,40)
 
 -- TODO: Develop retrieve system.
 -- List all items on a side monitor - DONE
