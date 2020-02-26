@@ -229,7 +229,7 @@ function doRoutine()
     checkLogType()
     checkSaplings()
     while true do
-        while turtle.getItemCount(16) < 1 do
+        while turtle.getItemCount(16) < 2 do
             print("Not doing this run, we need more coal on stot 16")
             sleep(30)
         end
