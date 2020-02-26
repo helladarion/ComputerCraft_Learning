@@ -613,7 +613,7 @@ doRoutine()
 
 -- TODO:
 -- Receive wireless requests to get items, and delivery it on a deliver chest.
--- 
+-- investigate, scroll for monitors. or/and find
 --
 -- Investigate coal storage bug **** - it was actually a LOG problem
 -- Develop retrieve system. - DONE
