@@ -532,8 +532,16 @@ function list_items()
     if db_data.items ~= nil then
         for mkey, mvalue in pairs(db_data.items) do
             mon.write("["..itemNumber.."] "..mkey..": "..mvalue.qtt)
-            local _, y = mon.getCursorPos()
-            mon.setCursorPos(1,y+1)
+            --print(itemNumber,mkey,mvalue.qtt)
+            local x, y = mon.getCursorPos()
+            local w, h = mon.getSize()
+            if itemNumber == h then
+                mon.setCursorPos(w/2,1)
+            elseif itemNumber > h then
+                mon.setCursorPos(w/2,y+1)
+            else
+                mon.setCursorPos(1,y+1)
+            end
             --print(mvalue.name)
             table.insert(itemRequestTable, mkey)
             itemNumber = itemNumber + 1
