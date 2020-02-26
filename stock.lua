@@ -67,8 +67,6 @@ function swapFacing(face)
     end
 end
 
-
-
 function updateFacing(rotate_dir)
     --auxiliar function for rotate the turtle, and get the new facing
     --print(db_data.facing.current)
@@ -110,6 +108,7 @@ function prepareToCraft(number_needed)
         [15] = turtle.getItemCount(15),
         [16] = turtle.getItemCount(16)
     }
+
     -- Place chest on top
     turtle.select(15)
     turtle.placeUp()
@@ -123,6 +122,14 @@ function prepareToCraft(number_needed)
     -- keep necessary number of items on slot 14
     turtle.select(14)
     turtle.dropUp(turtle.getItemCount() - number_needed)
+    -- checking if we have any left items
+    for i=1, 13 do
+        if turtle.getItemCount(i) > 0 then
+            turtle.select(i)
+            turtle.dropUp()
+        end
+    end
+    turtle.select(14)
     return on_hold_items
 end
 
@@ -150,6 +157,26 @@ function putItemOnSlot(slot, qtt)
    end
 end
 
+function selfService(itemNeeded)
+    local itemList = list_items()
+    for i = 1,#itemList do
+        if itemList[i] == itemNeeded then
+            local siloR,layerR,chestR = unpack(db_data.items[itemList[i]].location)
+            local current_items = db_data.storage[siloR].layer[layerR][chestR].current_used
+            local requestMore = 30
+            if current_items < requestMore then
+                requestMore = current_items
+            end
+            print("Getting more "..requestMore,itemList[i])
+            turtle.drop()
+            retrieveItems(tonumber(i), tonumber(requestMore))
+            check_basics.checkBasicSetup(start_items)
+            turtle.suck()
+            break
+        end
+    end
+end
+
 function createStuff(qtt, what)
    prepared = false
    if what.requires then
@@ -167,6 +194,8 @@ function createStuff(qtt, what)
        for _,pos in pairs(v) do
            while turtle.getItemCount(14) < total_needed do
                print("We need "..total_needed.." "..start_items[14][1].." on slot 14" )
+               print("Checking database to see if we have in stock...")
+               selfService("log")
                sleep(10)
            end
            turtle.select(14) --slot where we want the planks to be at
@@ -216,6 +245,8 @@ function add_item()
         -- check if we have enough resources to make this one
         while turtle.getItemCount(14) < (start_items[14][2] + 2) do
             print("We need more "..start_items[14][1].." to continue")
+            print("Checking database to see if we have in stock...")
+            selfService("log")
             sleep(10)
         end
         silo,layer,chestk = checkFreeChest()
@@ -251,13 +282,20 @@ function storeItem(new_c, s, l, c)
     end
     if new_c or not turtle.detect() then
         -- if chest is new craft a new chest
-        createStuff(1,chest)
+        if turtle.getItemCount(15) <= 1 then
+            createStuff(1,chest)
+        end
         db_data.storage[s].layer[l][c].used = true
     end
     turtle.select(15)
     turtle.place()
-    turtle.select(1)
-    turtle.drop()
+    -- If we have any items left over from the operation, we want to put it back 
+    for i=1, 12 do
+        if turtle.getItemCount(i) > 0 then
+            turtle.select(i)
+            turtle.drop()
+        end
+    end
     if turtle.getItemCount(13) > 0 then
         -- putting the created chest on the starter spot
         turtle.select(13)
@@ -274,7 +312,19 @@ function retrieveItems(item, qtt)
     --if item == nil or qtt == nil then
     --    error("You must specify the number of the item and the amount")
     --end
+    --TODO
+    -- check if the item requested exists
+    -- check if the number of requested items exists
+    local removeIt = false
     listRetrieve = list_items()
+    if listRetrieve[item] == nil or db_data.items[listRetrieve[item]].qtt < qtt then
+        print("Item doesn't exists or quantity is higher than stored")
+        return
+    end
+    if db_data.items[listRetrieve[item]].qtt == qtt then
+        print("We are going to empty out the chest")
+        removeIt = true
+    end
     print("You want "..qtt.." of "..listRetrieve[item])
     local siloR,layerR,chestR = unpack(db_data.items[listRetrieve[item]].location)
     walkPath(db_data.storage[siloR].path)
@@ -293,6 +343,17 @@ function retrieveItems(item, qtt)
     -- update number of items on the chest from silo
     local current_items = db_data.storage[siloR].layer[layerR][chestR].current_used
     db_data.storage[siloR].layer[layerR][chestR].current_used = tonumber(current_items) - tonumber(qtt)
+    if removeIt then
+        print("Removing the chest and making space in the database")
+        db_data.storage[siloR].layer[layerR][chestR].current_used = 0
+        db_data.storage[siloR].layer[layerR][chestR].used = false
+        db_data.items = table.removeKey(db_data.items, listRetrieve[item])
+        turtle.dig()
+        turtle.select(2)
+        turtle.transferTo(15)
+        turtle.select(1)
+    end
+
     while tonumber(db_data.facing.current) ~= tonumber(saved_facing) do
         updateFacing("r")
     end
@@ -301,6 +362,7 @@ function retrieveItems(item, qtt)
     save_file(db_data,database)
     list_items()
 end
+
 function checkFreeChest()
     --local sort_func = function(a, b) return a < b end
     local count_layers = 0
@@ -363,7 +425,7 @@ function checkChest()
     turtle.suck()
     if turtle.getItemCount() == 0 then
         --print("No new items")
-        error()
+        return
     end
     add_item()
 end
@@ -453,51 +515,104 @@ function findMonitor()
             return mon
         end
     end
-    error("No monitor found")
+    print("No monitor found")
 end
 
 function list_items()
     -- temporarily remove crafting table
     local mon = findMonitor()
+    if mon == nil then
+        return
+    end
     mon.clear()
     mon.setTextScale(0.5)
     mon.setCursorPos(1,1)
     local itemNumber = 1
     local itemRequestTable = {}
-    for mkey, mvalue in pairs(db_data.items) do
-        mon.write("["..itemNumber.."] "..mkey..": "..mvalue.qtt)
-        local _, y = mon.getCursorPos()
-        mon.setCursorPos(1,y+1)
-        --print(mvalue.name)
-        table.insert(itemRequestTable, mkey)
-        itemNumber = itemNumber + 1
+    if db_data.items ~= nil then
+        for mkey, mvalue in pairs(db_data.items) do
+            mon.write("["..itemNumber.."] "..mkey..": "..mvalue.qtt)
+            local _, y = mon.getCursorPos()
+            mon.setCursorPos(1,y+1)
+            --print(mvalue.name)
+            table.insert(itemRequestTable, mkey)
+            itemNumber = itemNumber + 1
+        end
+        --turtle.equipRight()
+        return itemRequestTable
     end
-    --turtle.equipRight()
-    return itemRequestTable
 end
 
 function doRoutine()
     while true do
-        if turtle.getItemCount(16) < 1 then
-            print("We need more coal to continue, skiping this run")
-            error()
+        while turtle.getItemCount(16) < 1 do
+            print("We need more "..start_items[16][1].." on slot 16" )
+            print("Checking database to see if we have in stock...")
+            selfService("coal")
+            sleep(10)
         end
-        db_data = getStarterFacingDirection()
+        list_items()
         checkChest()
         list_items()
         sleep(10)
     end
 end
 
-check_basics.checkBasicSetup(start_items)
-doRoutine()
---db_data = getStarterFacingDirection()
-retrieveItems(2,40)
+function table.removeKey(t,k)
+    local i = 0
+    local keys, values = {}, {}
+    for k, v in pairs(t) do
+        i = i + 1
+        keys[i] = k
+        values[i] = v
+    end
 
--- TODO: Develop retrieve system.
--- List all items on a side monitor - DONE
+    while i>0 do
+        if keys[i] == k then
+            table.remove(keys, i)
+            table.remove(values, i)
+            break
+        end
+        i = i - 1
+    end
+
+    local a = {}
+    for i = 1,#keys do
+        a[keys[i]] = values[i]
+    end
+
+    return a
+end
+
+tArgs = { ... }
+
+check_basics.checkBasicSetup(start_items)
+db_data = getStarterFacingDirection()
+if #tArgs == 2 then
+    print("Running retrieval mode")
+    local itemID = tArgs[1]
+    local itemQtt = tArgs[2]
+    print("You just requested "..itemQtt.." of "..itemID)
+    retrieveItems(tonumber(itemID), tonumber(itemQtt))
+    return
+elseif #tArgs == 1 then
+    print("Entering Debug Mode")
+    return
+end
+
+print("Running normal mode")
+doRoutine()
+
+-- TODO:
+-- Receive wireless requests to get items, and delivery it on a deliver chest.
+-- 
+--
+-- Investigate coal storage bug **** - it was actually a LOG problem
+-- Develop retrieve system. - DONE
+-- It needs to check if it will need more coal, and wood, and go get it in the correct storage. - DONE set to get 30
 -- show info on the monitor about the last item stored
 -- work on a better layout to display items.
 -- check for limit reached for items, create a new chest
 -- when retrieving items, if we have more than one chest with the same item, prefer to remove from the less full one, and if it gets empty remove it, and mark the spot as empty for that silo.
--- lucianotop344 idea, make a list of the most common items and create a different kind of storage (with hoppers) for them.
+-- lucianotop344 idea, make a list of the most common items and create a different kind of storage (with hoppers) for them. common_items = { "log", "dirt", "coal", "cobblestone", 
+-- Receive arguments for retrieve mode, or normal mode (store mode) also for debug mode
