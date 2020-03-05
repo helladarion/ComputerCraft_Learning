@@ -161,7 +161,7 @@ function selfService(itemNeeded)
     local itemList = list_items()
     for i = 1,#itemList do
         if itemList[i] == itemNeeded then
-            local siloR,layerR,chestR = unpack(db_data.items[itemList[i]].location)
+            local siloR,layerR,chestR = unpack(db_data.items[itemList[i]].location[table.getn(db_data.items[itemList[i]].location)])
             local current_items = db_data.storage[siloR].layer[layerR][chestR].current_used
             local requestMore = 30
             if current_items < requestMore then
@@ -250,18 +250,43 @@ function add_item()
             sleep(10)
         end
         silo,layer,chestk = checkFreeChest()
-        db_data.items[item].location = {silo, layer, chestk}
+        db_data.items[item].location = {}
+        table.insert(db_data.items[item].location, {silo, layer, chestk})
+        local num_items_to_store = tonumber(turtle.getItemDetail().count)
         --print(db_data.storage[silo].layer[layer])
-        db_data.storage[silo].layer[layer][chestk].current_used = turtle.getItemDetail().count
+        db_data.storage[silo].layer[layer][chestk].current_used = num_items_to_store
         new_chest = true
     else
         -- if the item already exists we want to store it on the same chest
-        silo,layer,chestk = unpack(db_data.items[item].location)
+        -- using the latest storage location
+        silo,layer,chestk = unpack(db_data.items[item].location[table.getn(db_data.items[item].location)])
         print(silo, layer, chestk)
         --print(db_data.storage[silo].layer[layer])
+        -- We must check if the chest is close to become full, and do the smart thing.
         local current_items = db_data.storage[silo].layer[layer][chestk].current_used
-        db_data.storage[silo].layer[layer][chestk].current_used = tonumber(current_items) + tonumber(turtle.getItemDetail().count)
+        local max_storage = (64*27)
+        local num_items_to_store = tonumber(turtle.getItemDetail().count)
+        --print(num_items_to_store, max_storage, current_items)
         new_chest = false
+        if tonumber(current_items) == tonumber(max_storage) then
+            -- We must create a new storage
+            silo,layer,chestk = checkFreeChest()
+            -- but how to save the same item into multiple silo, layer, chests?
+            print("Creating an extra location for this item")
+            table.insert(db_data.items[item].location, {silo, layer, chestk})
+            new_chest = true
+            db_data.storage[silo].layer[layer][chestk].current_used = turtle.getItemDetail().count
+        elseif (current_items + num_items_to_store) > max_storage then
+            -- we are have too many items for this chest
+            -- should we max out the chest? getting only the necessary number of item to get it full?
+            num_items_to_store = num_items_to_store - ((current_items + num_items_to_store) - max_storage)
+            --print(num_items_to_store)
+            print("Maxing out the chest")
+            turtle.drop(turtle.getItemDetail().count - num_items_to_store)
+            db_data.storage[silo].layer[layer][chestk].current_used = tonumber(current_items) + num_items_to_store
+        else
+            db_data.storage[silo].layer[layer][chestk].current_used = tonumber(current_items) + num_items_to_store
+        end
     end
     print("saving item "..item.." into "..silo.." layer "..layer.." chest "..chestk)
     -- go to storage
@@ -321,12 +346,12 @@ function retrieveItems(item, qtt)
         print("Item doesn't exists or quantity is higher than stored")
         return
     end
-    if db_data.items[listRetrieve[item]].qtt == qtt then
+    if ((db_data.items[listRetrieve[item]].qtt == qtt) or (db_data.items[listRetrieve[item]].qtt > (64*27)) and (db_data.items[listRetrieve[item]].qtt - (64*27) == qtt)) then
         print("We are going to empty out the chest")
         removeIt = true
     end
     print("You want "..qtt.." of "..listRetrieve[item])
-    local siloR,layerR,chestR = unpack(db_data.items[listRetrieve[item]].location)
+    local siloR,layerR,chestR = unpack(db_data.items[listRetrieve[item]].location[table.getn(db_data.items[listRetrieve[item]].location)])
     walkPath(db_data.storage[siloR].path)
     local layer = string.gsub(layerR, "l", "")
     local chest_number = string.gsub(chestR, "chest", "")
@@ -342,16 +367,24 @@ function retrieveItems(item, qtt)
     db_data.items[listRetrieve[item]].qtt = tonumber(db_data.items[listRetrieve[item]].qtt) - tonumber(qtt)
     -- update number of items on the chest from silo
     local current_items = db_data.storage[siloR].layer[layerR][chestR].current_used
+    if (tonumber(current_items) - tonumber(qtt)) <= 0 then
+        removeIt = true
+    end
     db_data.storage[siloR].layer[layerR][chestR].current_used = tonumber(current_items) - tonumber(qtt)
     if removeIt then
         print("Removing the chest and making space in the database")
         db_data.storage[siloR].layer[layerR][chestR].current_used = 0
         db_data.storage[siloR].layer[layerR][chestR].used = false
-        db_data.items = table.removeKey(db_data.items, listRetrieve[item])
         turtle.dig()
         turtle.select(2)
         turtle.transferTo(15)
         turtle.select(1)
+        if table.getn(db_data.items[listRetrieve[item]].location) < 2 then
+            db_data.items = table.removeKey(db_data.items, listRetrieve[item])
+        else
+            print("Removing extra location"..table.getn(db_data.items[listRetrieve[item]].location))
+            db_data.items[listRetrieve[item]].location[table.getn(db_data.items[listRetrieve[item]].location)] = nil
+        end
     end
 
     while tonumber(db_data.facing.current) ~= tonumber(saved_facing) do
@@ -457,7 +490,7 @@ function createBaseSilos(db_data,qtt)
         for lay=1,number_of_layers do
             db_data.storage["silo"..i].layer["l"..lay] = {}
             for cap=1,4 do
-                db_data.storage["silo"..i].layer["l"..lay]["chest"..cap] = { used = false, total_capacity = 27 * 64, current_used = 0 }
+                db_data.storage["silo"..i].layer["l"..lay]["chest"..cap] = { used = false, current_used = 0 }
             end
         end
     end
@@ -557,12 +590,12 @@ function doRoutine()
             print("We need more "..start_items[16][1].." on slot 16" )
             print("Checking database to see if we have in stock...")
             selfService("coal")
-            sleep(10)
+            sleep(5)
         end
         list_items()
         checkChest()
         list_items()
-        sleep(10)
+        sleep(5)
     end
 end
 
@@ -612,6 +645,7 @@ print("Running normal mode")
 doRoutine()
 
 -- TODO:
+-- check for limit reached for items, create a new chest
 -- Receive wireless requests to get items, and delivery it on a deliver chest.
 -- investigate, scroll for monitors. or/and find
 --
@@ -620,7 +654,6 @@ doRoutine()
 -- It needs to check if it will need more coal, and wood, and go get it in the correct storage. - DONE set to get 30
 -- show info on the monitor about the last item stored
 -- work on a better layout to display items.
--- check for limit reached for items, create a new chest
 -- when retrieving items, if we have more than one chest with the same item, prefer to remove from the less full one, and if it gets empty remove it, and mark the spot as empty for that silo.
--- lucianotop344 idea, make a list of the most common items and create a different kind of storage (with hoppers) for them. common_items = { "log", "dirt", "coal", "cobblestone", 
--- Receive arguments for retrieve mode, or normal mode (store mode) also for debug mode
+-- lucianotop344 idea, make a list of the most common items and create a different kind of storage (with hoppers) for them. common_items = { "log", "dirt", "coal", "cobblestone"}
+-- Receive arguments for retrieve mode, or normal mode (store mode) also for debug mode - DONE
