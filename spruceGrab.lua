@@ -7,9 +7,47 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     wifi=true
 end
 listen_computerId=5
-direction=0
+database = "sprucedb.json"
 
 start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:sapling",8}, [1] = {"minecraft:log",1}}
+
+function save_exists(name)
+    local f=io.open(name,"r")
+    if f~=nil then io.close(f) return true else return false end
+end
+
+function save_file(table,name)
+    local file = fs.open(name,"w")
+    file.write(textutils.serialize(table))
+    file.close()
+end
+
+function load_file(name)
+    local file = fs.open(name,"r")
+    local data = file.readAll()
+    file.close()
+    return textutils.unserialize(data)
+end
+
+function load_database()
+    if save_exists(database) then
+        local db_data = load_file(database)
+        print("database Exists")
+        if db_data == nil then
+            print("database empty or invalid, deleting it")
+            fs.delete(database)
+            error()
+        end
+        -- print(db_data.facing.starter)
+        return db_data
+    else
+        local db_data = {}
+        print("Creating New DB")
+        db_data.direction = 0
+        save_file(db_data,database)
+        return db_data
+    end
+end
 
 function checkLogType()
     n_logs = turtle.getItemCount(1)
@@ -183,51 +221,68 @@ function plant()
     if wifi == true then
         rednet.send(listen_computerId, "Re-planting "..tree.." Tree", "spruceGrab")
     end
-    move.fd(1)
+    move.up(1)
+    move.fd(2)
     turtle.select(15)
-    turtle.place()
+    turtle.placeDown()
     turtle.turnRight()
     move.fd(1)
     turtle.turnLeft()
     turtle.select(15)
-    turtle.place()
+    turtle.placeDown()
+    move.bk(1)
+    turtle.select(15)
+    turtle.placeDown()
     turtle.turnRight()
     move.bk(1)
     turtle.select(15)
-    turtle.place()
+    turtle.placeDown()
     turtle.turnLeft()
     move.bk(1)
-    turtle.select(15)
-    turtle.place()
+    move.dn(1)
 end
 
 function checkNext()
-    if direction % 2 == 0 then
+    db_data = load_database()
+    if db_data.direction % 2 == 0 then
         turtle.turnLeft()
     else
         turtle.turnRight()
     end
     move.fd(11,true)
-    if direction % 2 == 0 then
+    if db_data.direction % 2 == 0 then
         turtle.turnRight()
     else
         turtle.turnLeft()
     end
-    direction = direction + 1
+    db_data.direction = db_data.direction + 1
+    save_file(db_data,database)
 end
 
 function checkTreeName()
-    if direction % 2 == 0 then
+    db_data = load_database()
+    if db_data.direction % 2 == 0 then
         tree = "first"
     else
         tree = "second"
     end
 end
 
-function doRoutine()
+function doRoutine(qtt)
+    local running = true
     checkLogType()
     checkSaplings()
-    while true do
+    while running do
+        -- Not running the first one for free.
+        if qtt ~= nil and tonumber(qtt) > 0 then
+            qtt = tonumber(qtt) - 1
+            if tonumber(qtt) == 0 then
+                running = false
+            end
+        else
+            print("That is it, not running.")
+            running = false
+        end
         while turtle.getItemCount(16) < 2 do
             print("Not doing this run, we need more coal on stot 16")
             sleep(30)
@@ -247,9 +302,15 @@ function doRoutine()
                     turtle.dig()
                     move.fd(1)
                 end
+                turtle.digUp()
                 turtle.dropUp()
                 turtle.select(1)
             end
+        elseif turtle.detectUp() then
+            turtle.select(12)
+            turtle.digUp()
+            turtle.dropUp()
+            turtle.select(1)
         end
         turtle.select(1)
         while not turtle.compare() do
@@ -285,6 +346,21 @@ function doRoutine()
     end
 end
 
-check_basics.checkBasicSetup(start_items)
-doRoutine()
+tArgs = { ... }
 
+check_basics.checkBasicSetup(start_items)
+if #tArgs == 1 then
+    print("Running limited mode")
+    local qtt = tArgs[1]
+    --local itemQtt = tArgs[2]
+    --print("You just requested "..itemQtt.." of "..itemID)
+    print("We are going to collect wood "..qtt.." times")
+    doRoutine(qtt)
+else
+    print("You must specify the number of times your want to run!")
+end
+
+
+--TODO
+-- Deploy systems to the storage system
+-- Only activate if the storage is low on wood.
