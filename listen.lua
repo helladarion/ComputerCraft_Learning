@@ -7,7 +7,7 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
 end
 channel=2
 
-print("Waiting for commands")
+print("["..os.getComputerID().."] Waiting for commands")
 while wifi do
     id, cmd, args = rednet.receive(5)
     if id ~= null then
@@ -22,3 +22,4 @@ while wifi do
         sleep(2)
     end
 end
+if not wifi then print("No Modem") end

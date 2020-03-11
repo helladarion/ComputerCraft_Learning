@@ -646,6 +646,7 @@ print("Running normal mode")
 doRoutine()
 
 -- TODO:
+-- Have a modem that swaps with the crafting table and vice versa.
 -- Take care of non Stackable items, and set the max accordingly
 -- Come up with a better way to call the retrieve system, and a location to deposit the retrieved item, also keep the system running at all times.
 -- Create a setup script to put the monitors in place if not found.
