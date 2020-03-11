@@ -595,6 +595,7 @@ function doRoutine()
         list_items()
         checkChest()
         list_items()
+        print("Back to base")
         sleep(5)
     end
 end
@@ -645,7 +646,13 @@ print("Running normal mode")
 doRoutine()
 
 -- TODO:
--- check for limit reached for items, create a new chest
+-- Take care of non Stackable items, and set the max accordingly
+-- Come up with a better way to call the retrieve system, and a location to deposit the retrieved item, also keep the system running at all times.
+-- Create a setup script to put the monitors in place if not found.
+--
+--
+--
+-- check for limit reached for items, create a new chest - Done
 -- Receive wireless requests to get items, and delivery it on a deliver chest.
 -- investigate, scroll for monitors. or/and find
 --
@@ -654,6 +661,6 @@ doRoutine()
 -- It needs to check if it will need more coal, and wood, and go get it in the correct storage. - DONE set to get 30
 -- show info on the monitor about the last item stored
 -- work on a better layout to display items.
--- when retrieving items, if we have more than one chest with the same item, prefer to remove from the less full one, and if it gets empty remove it, and mark the spot as empty for that silo.
+-- when retrieving items, if we have more than one chest with the same item, prefer to remove from the less full one, and if it gets empty remove it, and mark the spot as empty for that silo. - DONE
 -- lucianotop344 idea, make a list of the most common items and create a different kind of storage (with hoppers) for them. common_items = { "log", "dirt", "coal", "cobblestone"}
 -- Receive arguments for retrieve mode, or normal mode (store mode) also for debug mode - DONE

@@ -149,7 +149,6 @@ function suckSaplings()
     turtle.turnLeft()
 end
 
-
 function cutit()
     turtle.select(1)
     turtle.dig()
