@@ -55,7 +55,6 @@ function escava(ateonde,vez)
             break
         end
     end
-
 end
 
 function limpaTurtle()
