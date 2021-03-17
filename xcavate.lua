@@ -9,7 +9,7 @@ end
 listen_computerId=5
 
 -- End Wifi related configuration Block --
-start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:torch",3}, [14] = {"minecraft:chest",1}}
+start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:chest",1}}
 
 -- Database related block --
 database = "xcavate_db.json"
@@ -36,8 +36,9 @@ end
 -- Excavator 9x9 following a zigzag pattern
 
 local WIDTH = 20
-local HEIGHT = 20
-local LIMIT = 13
+local HEIGHT = 15
+local LIMIT = 14
+local CHEST_SLOT = 15
 
 params = { ... }
 if #params < 1 then
@@ -60,6 +61,8 @@ function cleanBlackList()
         "minecraft:gravel",
         "minecraft:granite",
         "minecraft:diorite",
+        "minecraft:flint",
+        "minecraft:dirt",
         "minecraft:andesite"
     }
 
@@ -93,9 +96,21 @@ function sortInventory()
     turtle.select(1)
 end
 
+function checkSpace()
+    for i=1, LIMIT do
+        if turtle.getItemCount(i) == 0 then
+            return false
+        end
+    end
+    return true
+end
+
+
+
 function doTheWork()
     totalMove = tonumber(params[1])
     side = params[2]
+    position = "floor"
 
     caveWalkDig(1)
 
@@ -119,7 +134,13 @@ function doTheWork()
                     turtle.digUp()
                     move.up(1)
                 end
+                -- finished line
                 move.rd(1)
+                if checkSpace() then
+                    cleanBlackList()
+                    sortInventory()
+                end
+
                 if current_side == "r" then
                     current_side = "l"
                 else
@@ -144,11 +165,16 @@ function doTheWork()
         end
         cleanBlackList()
         sortInventory()
+        if position == "floor" then
+            position = "ceiling"
+        else
+            position = "floor"
+        end
     end
     if not turtle.detectDown() then
         move.dn(HEIGHT)
     end
-    turtle.select(14)
+    turtle.select(CHEST_SLOT)
     turtle.placeUp()
     for x=1, LIMIT do
         turtle.select(x)
