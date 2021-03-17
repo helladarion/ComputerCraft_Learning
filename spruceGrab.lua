@@ -9,7 +9,8 @@ end
 listen_computerId=5
 database = "sprucedb.json"
 
-start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:sapling",8}, [1] = {"minecraft:log",1}}
+--start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:spruce_sapling",8}, [1] = {"minecraft:spruce_log",1}}
+start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:spruce_sapling",8}}
 
 function save_exists(name)
     local f=io.open(name,"r")
@@ -60,7 +61,7 @@ function checkLogType()
         error()
     else
         -- Checking first if it a minecraft log
-        if turtle.getItemDetail(1).name == "minecraft:log" then
+        if turtle.getItemDetail(1).name == "minecraft:spruce_log" then
             print("We do have a log on the slot 1")
             if wifi == true then
                 rednet.send(listen_computerId, "We do have a log on the slot 1", "spruceGrab")
@@ -70,30 +71,30 @@ function checkLogType()
             if wifi == true then
                 rednet.send(listen_computerId, "Checking log type", "spruceGrab")
             end
-            turtle.select(1)
-            if turtle.detectUp() then
-                turtle.digUp()
-            end
-            turtle.placeUp()
-            bol, value = turtle.inspectUp()
-            if value.state.variant == "spruce" then
+            --turtle.select(1)
+            --if turtle.detectUp() then
+            --    turtle.digUp()
+            --end
+            --turtle.placeUp()
+            bol, value = turtle.inspect()
+            if value.name == "minecraft:spruce_log" then
                 print("We have a spruce log in place we are good to go")
                 if wifi == true then
                     rednet.send(listen_computerId, "We have a spruce log in place we are good to go", "spruceGrab")
                 end
-                turtle.digUp()
+                --turtle.digUp()
             else
-                print("We NEED a spruce log on slot 1 to continue")
+                print("This program is intended to work with spruce trees")
                 if wifi == true then
-                    rednet.send(listen_computerId, "We NEED a spruce log on slot 1 to continue", "spruceGrab")
+                    rednet.send(listen_computerId, "This program is intended to work with spruce trees", "spruceGrab")
                 end
                 -- Exiting
                 error()
             end
         else
-            print("We need at least one spruce log on slot 1")
+            print("This program is intended to work with spruce trees")
             if wifi == true then
-                rednet.send(listen_computerId, "We need at least one spruce log on slot 1", "spruceGrab")
+                rednet.send(listen_computerId, "This program is intended to work with spruce trees", "spruceGrab")
             end
             -- Exiting
             error()
@@ -113,12 +114,12 @@ function checkSaplings()
     else
         -- Check if they are the right type of sapplings
         prev_slot = turtle.getSelectedSlot()
-        if turtle.getItemDetail(15).name == "minecraft:sapling" then
+        if turtle.getItemDetail(15).name == "minecraft:spruce_sapling" then
             move.up(1)
             turtle.select(15)
             turtle.placeDown()
             bol, value = turtle.inspectDown()
-            if value.state.type == "spruce" then
+            if value.name == "minecraft:spruce_sapling" then
                 print("All good we have the right type of sapling")
                 if wifi == true then
                     rednet.send(listen_computerId, "All good we have the right type of sapling", "spruceGrab")
@@ -362,5 +363,5 @@ end
 
 
 --TODO
--- Deploy systems to the storage system
--- Only activate if the storage is low on wood.
+-- Deploy logs to the storage system
+-- Only activate if the storage is low on wood. - Stop when we get 8 stacks of 64
