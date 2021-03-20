@@ -8,9 +8,28 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
 end
 listen_computerId=5
 database = "sprucedb.json"
+local LIMIT = 14
 
---start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:spruce_sapling",8}, [1] = {"minecraft:spruce_log",1}}
-start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:spruce_sapling",8}}
+start_items = {[16] = {"minecraft:charcoal",5}, [15] = {"minecraft:spruce_sapling",8}, [1] = {"minecraft:spruce_log",1}}
+--start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:spruce_sapling",8}}
+
+function cleanBlackList()
+    black_list = {
+        "minecraft:stick"
+    }
+
+    for i=1, LIMIT do
+        for _, item in pairs(black_list) do
+            local currentItem = turtle.getItemDetail(i)
+            if currentItem ~= nil then
+                if currentItem.name == item then
+                    turtle.select(i)
+                    turtle.drop()
+                end
+            end
+        end
+    end
+end
 
 function save_exists(name)
     local f=io.open(name,"r")
@@ -71,18 +90,18 @@ function checkLogType()
             if wifi == true then
                 rednet.send(listen_computerId, "Checking log type", "spruceGrab")
             end
-            --turtle.select(1)
-            --if turtle.detectUp() then
-            --    turtle.digUp()
-            --end
-            --turtle.placeUp()
-            bol, value = turtle.inspect()
+            turtle.select(1)
+            if turtle.detectUp() then
+                turtle.digUp()
+            end
+            turtle.placeUp()
+            bol, value = turtle.inspectUp()
             if value.name == "minecraft:spruce_log" then
                 print("We have a spruce log in place we are good to go")
                 if wifi == true then
                     rednet.send(listen_computerId, "We have a spruce log in place we are good to go", "spruceGrab")
                 end
-                --turtle.digUp()
+                turtle.digUp()
             else
                 print("This program is intended to work with spruce trees")
                 if wifi == true then
@@ -186,6 +205,7 @@ function suckSaplings()
     end
     move.fd(3)
     turtle.turnLeft()
+    cleanBlackList()
 end
 
 function cutit()
@@ -297,7 +317,7 @@ function doRoutine(qtt)
         turtle.select(1)
         if not move.fd(3) then
             bolee, value_l = turtle.inspect()
-            if value_l.name == "minecraft:leaves" then
+            if value_l.name == "minecraft:spruce_leaves" then
                 for i=1, 3 do
                     turtle.select(13)
                     turtle.dig()
@@ -344,6 +364,17 @@ function doRoutine(qtt)
             move.bk(3)
         end
         time.wait(3)
+        total_stacks=0
+        for i=1, 14 do
+            if turtle.getItemCount(i) ~= nil and turtle.getItemCount(i) == 64 then
+                total_stacks = total_stacks + 1
+            end
+        end
+        if total_stacks >= 8 then
+            print("Already have all the stacks we want")
+            --exiting
+            error()
+        end
     end
 end
 
