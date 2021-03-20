@@ -9,7 +9,7 @@ end
 listen_computerId=5
 
 -- End Wifi related configuration Block --
-start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:chest",1}}
+start_items = {[16] = {"minecraft:charcoal",15}, [15] = {"minecraft:chest",1}}
 
 -- Database related block --
 database = "xcavate_db.json"
@@ -33,18 +33,25 @@ function load_file(name)
 end
 -- End Database related block --
 
--- Excavator 9x9 following a zigzag pattern
 
-local WIDTH = 20
-local HEIGHT = 15
-local LIMIT = 14
-local CHEST_SLOT = 15
 
 params = { ... }
 if #params < 1 then
     print("Usage: xcavator <depth/layers> <r> or <l> for right or left")
     return
 end
+
+if params[3] ~= nil and params[4] ~= nil then
+-- Excavator 9x9 following a zigzag pattern
+    WIDTH = tonumber(params[3]) -- Can be even or odd
+    HEIGHT = tonumber(params[4]) -- Must be odd number i.e. 7, 9, 15
+    print("Selected values are "..WIDTH.." and "..HEIGHT)
+else
+    WIDTH = 20 -- Can be even or odd
+    HEIGHT = 15 -- Must be odd number i.e. 7, 9, 15
+end
+local LIMIT = 15
+local CHEST_SLOT = 15
 
 function caveWalkDig(Qtt)
     for x=1, Qtt do
@@ -105,12 +112,25 @@ function checkSpace()
     return true
 end
 
-
+function depositOres(steps)
+    turtle.turnRight()
+    move.bk(steps)
+    print("Depositing what we got")
+    for x=1, LIMIT do
+        turtle.select(x)
+        turtle.dropUp()
+    end
+end
 
 function doTheWork()
     totalMove = tonumber(params[1])
     side = params[2]
     position = "floor"
+    print("Starting a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalMove.." times.")
+
+    -- Place chest to store the ores
+    turtle.select(CHEST_SLOT)
+    turtle.placeUp()
 
     caveWalkDig(1)
 
@@ -123,10 +143,14 @@ function doTheWork()
     end
 
     for y=1, totalMove do
+        if turtle.getItemCount(16) < 4 then
+            print("Not enough fuel to perform the run")
+            error()
+        end
         print("Executing layer: "..y)
-        for x=1, HEIGHT do
-            caveWalkDig(WIDTH)
-            if not (x == HEIGHT) then
+        for x=1, tonumber(HEIGHT) do
+            caveWalkDig(tonumber(WIDTH))
+            if not (x == tonumber(HEIGHT)) then
                 if y % 2 == 0 then
                     turtle.digDown()
                     move.dn(1)
@@ -152,33 +176,42 @@ function doTheWork()
             turtle.turnLeft()
             if not (y == totalMove) then
                 caveWalkDig(1)
-                turtle.turnLeft()
-                current_side="l"
+                go_that_many_back = y + 1
+            else
+                go_that_many_back = y
             end
+            turtle.turnLeft()
+            current_side="l"
         else
             turtle.turnRight()
             if not (y == totalMove) then
                 caveWalkDig(1)
-                turtle.turnRight()
-                current_side="r"
+                go_that_many_back = y + 1
+            else
+                go_that_many_back = y
             end
+            turtle.turnRight()
+            current_side="r"
         end
         cleanBlackList()
         sortInventory()
+        -- first iteration when the turtle will be on top corner
         if position == "floor" then
             position = "ceiling"
         else
             position = "floor"
         end
+        -- we want to check on the second iteration
+        if position == "floor" and params[4] == nil then
+            depositOres(go_that_many_back)
+            if y ~= totalMove then
+                move.fd(go_that_many_back)
+                turtle.turnLeft()
+            end
+        end
     end
     if not turtle.detectDown() then
-        move.dn(HEIGHT)
-    end
-    turtle.select(CHEST_SLOT)
-    turtle.placeUp()
-    for x=1, LIMIT do
-        turtle.select(x)
-        turtle.dropUp()
+        move.dn(tonumber(HEIGHT))
     end
 end
 
