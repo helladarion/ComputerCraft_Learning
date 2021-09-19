@@ -13,8 +13,8 @@ start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:torch",30}, [14]
 -- torches on 15
 -- 2 chests on 14
 params = { ... }
-if #params < 1 then
-    print("Usage: mine_shaft <distance> <r> or <l> for right or left")
+if #params < 3 then
+    print("Usage: mine_shaft <distance> <r> or <l> for right or left <howManyTimes>")
     return
 end
 
@@ -94,12 +94,12 @@ function doTheWork()
     else
         turtle.turnRight()
     end
-    --move.fd(4)
-    --if side == "r" then
-    --    turtle.turnRight()
-    --else
-    --    turtle.turnLeft()
-    --end
+    caveWalkDig(4)
+    if side == "r" then
+        turtle.turnRight()
+    else
+        turtle.turnLeft()
+    end
 
     if wifi == true then
         rednet.send(channel, "I'm Done come see me", "status")
@@ -107,13 +107,15 @@ function doTheWork()
 end
 
 check_basics.checkBasicSetup(start_items)
+howmanytimes=tonumber(params[3])
 
-for i=1, 2 do
+for i=1, howmanytimes do
     doTheWork()
     turtle.select(14)
     turtle.placeUp()
     -- cleaning turtle
     for i=1,13 do
+        turtle.select(i)
         turtle.dropUp()
     end
 end
