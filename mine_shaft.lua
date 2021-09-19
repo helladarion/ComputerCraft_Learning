@@ -96,9 +96,9 @@ function doTheWork()
     end
     caveWalkDig(4)
     if side == "r" then
-        turtle.turnRight()
-    else
         turtle.turnLeft()
+    else
+        turtle.turnRight()
     end
 
     if wifi == true then
