@@ -20,14 +20,11 @@ end
 
 function caveWalkDig(Qtt)
     for x=1, Qtt do
-        if not move.fd(1) then
+        while not move.fd(1) do
             turtle.dig()
-            move.fd(1)
-            digUpDown()
-        else
-            -- break up and down
-            digUpDown()
+            sleep(0.5)
         end
+        digUpDown()
     end
 end
 
