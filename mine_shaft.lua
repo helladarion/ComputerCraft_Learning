@@ -77,6 +77,7 @@ function doTheWork()
     else
         turtle.turnLeft()
     end
+    check_basics.cleanBlackList()
     caveWalkDig(4)
     if side == "r" then
         turtle.turnRight()
