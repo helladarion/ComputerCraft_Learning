@@ -28,15 +28,28 @@ function plantHarvestCrops()
     end
 end
 
+seed="minecraft:wheat_seeds"
+LIMIT=15
+
 function checkCrops()
+    -- Auto detecting where the seed is
+    for i=1, LIMIT do
+        local currentItem = turtle.getItemDetail(i)
+        if currentItem ~= nil then
+            if currentItem.name == seed then
+                spot=i
+                break
+            end
+        end
+    end
     if turtle.detectDown() == false then
-        turtle.select(1)
+        turtle.select(spot)
         turtle.placeDown()
     else
         _, data = turtle.inspectDown()
         if data.state.age == 7 then
             turtle.digDown()
-            turtle.select(1)
+            turtle.select(spot)
             turtle.placeDown()
         end
     end
