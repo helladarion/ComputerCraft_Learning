@@ -13,6 +13,30 @@ function groupSimilar()
     end
 end
 
+function cleanBlackList()
+    black_list = {
+        "minecraft:cobblestone",
+        "minecraft:gravel",
+        "minecraft:granite",
+        "minecraft:diorite",
+        "minecraft:flint",
+        "minecraft:dirt",
+        "minecraft:andesite"
+    }
+
+    for i=1, LIMIT do
+        for _, item in pairs(black_list) do
+            local currentItem = turtle.getItemDetail(i)
+            if currentItem ~= nil then
+                if currentItem.name == item then
+                    turtle.select(i)
+                    turtle.drop()
+                end
+            end
+        end
+    end
+end
+
 --start_items = {[16] = {"minecraft:coal",5}, [15] = {"minecraft:torch",10}, [14] = {"minecraft:crafting_table",1}, [13] = {"minecraft:chest",2}}
 function checkBasicSetup(start_items, on_hold)
     groupSimilar()

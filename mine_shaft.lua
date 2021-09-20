@@ -108,6 +108,7 @@ howmanytimes=tonumber(params[3])
 
 for i=1, howmanytimes do
     doTheWork()
+    check_basics.cleanBlackList()
     turtle.select(14)
     turtle.placeUp()
     -- cleaning turtle
