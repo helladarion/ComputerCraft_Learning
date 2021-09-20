@@ -51,7 +51,9 @@ function deposit(item)
     turtle.select(item)
     qtt = turtle.getItemCount(item)
     turtle.turnLeft()
-    turtle.drop(qtt - 1)
+    if qtt > 0 then
+        turtle.drop(qtt - 1)
+    end
     turtle.turnRight()
 end
 count = 1
