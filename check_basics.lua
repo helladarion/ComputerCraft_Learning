@@ -13,6 +13,8 @@ function groupSimilar()
     end
 end
 
+local LIMIT = 15
+
 function cleanBlackList()
     black_list = {
         "minecraft:cobblestone",
