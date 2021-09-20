@@ -1,5 +1,6 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
 os.loadAPI("/ComputerCraft_Learning/time.lua")
+os.loadAPI("/ComputerCraft_Learning/check_basics.lua")
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
     print("Openned Wifi on the left side")
@@ -7,6 +8,7 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
 end
 channel=2
 turtle.select(1)
+start_items = {[16] = {"minecraft:coal",5}, [1] = {"minecraft:wheat_seeds",10}}
 
 function plantHarvestCrops()
     for x=1,9 do
@@ -28,32 +30,45 @@ function plantHarvestCrops()
     end
 end
 
-seed="minecraft:wheat_seeds"
-LIMIT=15
-
-function checkCrops()
+function checkPos()
+    crop_list = { "minecraft:wheat_seeds",
+                  "minecraft:wheat"
+                }
+    seed_pos=1
+    wheat_pos=2
+    LIMIT=15
     -- Auto detecting where the seed is
     for i=1, LIMIT do
-        local currentItem = turtle.getItemDetail(i)
-        if currentItem ~= nil then
-            if currentItem.name == seed then
-                spot=i
-                break
+        for _, item in pairs(crop_list) do
+            local currentItem = turtle.getItemDetail(i)
+            if currentItem ~= nil then
+                if currentItem.name == item then
+                    if item == "minecraft:wheat_seeds" then
+                        seed_pos=i
+                    else
+                        wheat_pos=i
+                    end
+                end
             end
         end
     end
+end
+
+function checkCrops()
+    checkPos()
     if turtle.detectDown() == false then
-        turtle.select(spot)
+        turtle.select(seed_pos)
         turtle.placeDown()
     else
         _, data = turtle.inspectDown()
         if data.state.age == 7 then
             turtle.digDown()
-            turtle.select(spot)
+            turtle.select(seed_pos)
             turtle.placeDown()
         end
     end
 end
+
 function doRoutine()
     move.fd(1)
     plantHarvestCrops()
@@ -66,17 +81,22 @@ function deposit(item)
     qtt = turtle.getItemCount(item)
     turtle.turnLeft()
     if qtt > 0 then
-        turtle.drop(qtt - 1)
+        turtle.dropDown(qtt - 1)
     end
     turtle.turnRight()
 end
+
+check_basics.checkBasicSetup(start_items)
+
 count = 1
 while true do
     doRoutine()
+    check_basics.groupSimilar()
+    checkPos()
     if count % 2 == 0 then
-        deposit(2)
+        deposit(wheat_pos)
     else
-        deposit(1)
+        deposit(seed_pos)
     end
     count = count + 1
     time.wait(5)
