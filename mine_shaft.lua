@@ -38,6 +38,9 @@ function shaft(howfar)
         if x % 14 == 0 then
             placeTorch()
         end
+        if x % 50 == 0 then
+            check_basics.cleanBlackList()
+        end
     end
     placeTorch()
 end
@@ -77,7 +80,6 @@ function doTheWork()
     else
         turtle.turnLeft()
     end
-    check_basics.cleanBlackList()
     caveWalkDig(4)
     if side == "r" then
         turtle.turnRight()
