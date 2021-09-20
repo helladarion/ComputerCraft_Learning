@@ -1,4 +1,5 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
+os.loadAPI("/ComputerCraft_Learning/time.lua")
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
     print("Openned Wifi on the left side")
@@ -65,5 +66,5 @@ while true do
         deposit(1)
     end
     count = count + 1
-    sleep(300)
+    time.wait(5)
 end
