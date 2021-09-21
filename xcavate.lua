@@ -9,6 +9,8 @@ end
 listen_computerId=5
 
 -- End Wifi related configuration Block --
+
+-- TODO Make it accept coal or charcoal as fuel
 start_items = {[16] = {"minecraft:charcoal",15}, [15] = {"minecraft:chest",1}}
 
 -- Database related block --
@@ -142,6 +144,7 @@ function doTheWork()
         current_side="l"
     end
 
+    -- TODO Calculate how much fuel is necessary to perform the run
     for y=1, totalMove do
         if turtle.getItemCount(16) < 4 then
             print("Not enough fuel to perform the run")
@@ -206,7 +209,11 @@ function doTheWork()
             depositOres(go_that_many_back)
             if y ~= totalMove then
                 move.fd(go_that_many_back)
-                turtle.turnLeft()
+                if current_side == "r" then
+                    turtle.turnRight()
+                else
+                    turtle.turnLeft()
+                end
             end
         end
     end
@@ -217,3 +224,6 @@ end
 
 check_basics.checkBasicSetup(start_items)
 doTheWork()
+-- TODO
+-- We want to have a resume function, so it could just continue the job if it
+-- for any reason stops.
