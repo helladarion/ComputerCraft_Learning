@@ -37,7 +37,7 @@ end
 
 params = { ... }
 if #params < 1 then
-    print("Usage: xcavator <depth/layers> <r> or <l> for right or left")
+    print("Usage: xcavator <depth/layers> <r> or <l> for right or left <width> <height>")
     return
 end
 

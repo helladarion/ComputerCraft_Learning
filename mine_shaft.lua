@@ -12,6 +12,11 @@ start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:torch",30}, [14]
 -- coal on 16
 -- torches on 15
 -- 2 chests on 14
+--
+-- TODO
+-- We want to use a single chest
+-- we want it to remember the location of the last shaft
+
 params = { ... }
 if #params < 3 then
     print("Usage: mine_shaft <distance> <r> or <l> for right or left <howManyTimes>")
