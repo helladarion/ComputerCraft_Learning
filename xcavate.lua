@@ -1,5 +1,7 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
 os.loadAPI("/ComputerCraft_Learning/check_basics.lua")
+os.loadAPI("/ComputerCraft_Learning/persistence.lua")
+local myName = shell.getRunningProgram()
 -- Wifi related configuration Block --
 if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
     rednet.open("Left")
@@ -34,7 +36,14 @@ function load_file(name)
     return textutils.unserialize(data)
 end
 -- End Database related block --
-
+-- TODO
+-- from start position we want to save where the chest is and have a resume option
+-- still not sure how to keep the order of the steps.
+-- IDEA:
+-- we want to detect if the turtle is currently running. running=true/false
+-- we also want to save what was the request params
+-- we also want to know what is left to be done.
+-- we also want to check where we stopped and be able to resume.
 
 
 params = { ... }
@@ -115,7 +124,6 @@ function checkSpace()
 end
 
 function depositOres(steps)
-    turtle.turnRight()
     move.bk(steps)
     print("Depositing what we got")
     for x=1, LIMIT do
@@ -204,8 +212,14 @@ function doTheWork()
         else
             position = "floor"
         end
+        -- Do the deposit with any size
         -- we want to check on the second iteration
         if position == "floor" and params[4] == nil then
+            if current_side == "r" then
+                turtle.turnRight()
+            else
+                turtle.turnLeft()
+            end
             depositOres(go_that_many_back)
             if y ~= totalMove then
                 move.fd(go_that_many_back)
@@ -222,8 +236,25 @@ function doTheWork()
     end
 end
 
-check_basics.checkBasicSetup(start_items)
-doTheWork()
+--check_basics.checkBasicSetup(start_items)
+--doTheWork()
 -- TODO
 -- We want to have a resume function, so it could just continue the job if it
 -- for any reason stops.
+-- calculate all necessary fuel do performe the task
+db_data = persistence.open_database(myName)
+
+db_data.position = {}
+db_data.running = false
+db_data.totalMove = params[1] -- param[1]
+db_data.startSide = params[2] -- param[2]
+db_data.width = 0 -- param[3]
+db_data.height = 0 -- param[4]
+-- Task in progress
+db_data.position.curr_y = 0 -- totalMove
+db_data.position.curr_x = 0 -- HEIGHT
+db_data.position.curr_width = 0 -- WIDTH
+db_data.position.curr_side = "l"
+db_data.position.curr_pos = "floor"
+
+persistence.save_database(db_data,myName)

@@ -10,3 +10,18 @@ function checkFuel()
         turtle.select(1)
     end
 end
+
+-- Calculate necessary amount
+function calcNeededFuel(steps)
+    -- one coal gives 80 movement
+    local current_fuel = turtle.getFuelLevel()
+    local calc_needed = steps / 80
+    local needed = calc_needed - current_fuel
+    if needed > 0 then
+        return needed - current_fuel
+    else
+        return 0
+    end
+end
+
+calcNeededFuel(300)
