@@ -65,10 +65,14 @@ local LIMIT = 15
 local CHEST_SLOT = 15
 
 function caveWalkDig(Qtt)
-    for x=1, Qtt do
-        while not move.fd(1) do
-            turtle.dig()
-            sleep(0.5)
+    if Qtt > 0 then
+        for x=1, tonumber(Qtt) do
+            while not move.fd(1) do
+                turtle.dig()
+                sleep(0.5)
+            end
+            db_data.position.curr_width = Qtt - x
+            persistence.save_database(db_data,myName)
         end
     end
 end
@@ -133,34 +137,78 @@ function depositOres(steps)
 end
 
 function doTheWork()
-    totalMove = tonumber(params[1])
-    side = params[2]
-    position = "floor"
-    print("Starting a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalMove.." times.")
+    db_data = persistence.open_database(myName)
+    -- we want to check if we stopped in the middle or if that is a new run
+    if db_data.running == false or db_data.running == nil then
+        -- new run
+        db_data.position = {}
+        check_basics.checkBasicSetup(start_items)
+        db_data.running = true
+        totalMove = tonumber(params[1])
+        side = params[2]
+        startSide = side
+        position = "floor"
+        current_width = WIDTH
+        current_height = HEIGHT
+        print("Starting a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalMove.." times.")
+        -- Place chest to store the ores
+        turtle.select(CHEST_SLOT)
+        turtle.placeUp()
+        caveWalkDig(1)
 
-    -- Place chest to store the ores
-    turtle.select(CHEST_SLOT)
-    turtle.placeUp()
-
-    caveWalkDig(1)
-
-    if side == "r" then
-        turtle.turnRight()
-        current_side="r"
+        if side == "r" then
+            turtle.turnRight()
+            current_side="r"
+        else
+            turtle.turnLeft()
+            current_side="l"
+        end
     else
-        turtle.turnLeft()
-        current_side="l"
+        -- resuming run
+        -- TODO Fix reading values from json.
+        resumed = true
+        totalMove = db_data.totalMove
+        side = db_data.position.curr_side
+        startSide = db_data.startSide
+        position = db_data.position.curr_pos
+        WIDTH = db_data.width
+        HEIGHT = db_data.height
+        current_width = (db_data.position.curr_width -1)
+        current_height = db_data.position.curr_height
+        --print("WIDTH VALUE: "..db_data[1].porsition)
+        --print("Resuming a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalMove.." times.")
+        current_side = db_data.position.curr_side
     end
+    -- Store start info
+    db_data.totalMove = totalMove -- param[1]
+    db_data.startSide = startSide -- param[2]
+    db_data.width = WIDTH -- param[3]
+    db_data.height = HEIGHT -- param[4]
+
+    db_data.position.curr_side = current_side
+    db_data.position.curr_pos = position
 
     -- TODO Calculate how much fuel is necessary to perform the run
     for y=1, totalMove do
+        db_data.position.curr_y = y -- totalMove
         if turtle.getItemCount(16) < 4 then
             print("Not enough fuel to perform the run")
             error()
         end
         print("Executing layer: "..y)
-        for x=1, tonumber(HEIGHT) do
-            caveWalkDig(tonumber(WIDTH))
+        if db_data.position.curr_height == HEIGHT or db_data.position.curr_height == nil then
+            current_height = 1
+        else
+            curr_height = db_data.position.curr_height
+        end
+        for x=tonumber(current_height), tonumber(HEIGHT) do
+            db_data.position.curr_height = x -- HEIGHT
+            if resumed == true then
+                caveWalkDig(current_width)
+                resumed = false
+            else
+                caveWalkDig(WIDTH)
+            end
             if not (x == tonumber(HEIGHT)) then
                 if y % 2 == 0 then
                     turtle.digDown()
@@ -181,6 +229,8 @@ function doTheWork()
                 else
                     current_side = "r"
                 end
+                db_data.position.curr_side = current_side
+                persistence.save_database(db_data,myName)
             end
         end
         if current_side == "r" then
@@ -204,6 +254,7 @@ function doTheWork()
             turtle.turnRight()
             current_side="r"
         end
+        db_data.position.curr_side = current_side
         cleanBlackList()
         sortInventory()
         -- first iteration when the turtle will be on top corner
@@ -212,14 +263,16 @@ function doTheWork()
         else
             position = "floor"
         end
+        db_data.position.curr_pos = position
         -- Do the deposit with any size
         -- we want to check on the second iteration
-        if position == "floor" and params[4] == nil then
+        if position == "floor" then
             if current_side == "r" then
-                turtle.turnRight()
-            else
                 turtle.turnLeft()
+            else
+                turtle.turnRight()
             end
+            print("My side is "..current_side.." we will go back that many "..go_that_many_back)
             depositOres(go_that_many_back)
             if y ~= totalMove then
                 move.fd(go_that_many_back)
@@ -230,18 +283,44 @@ function doTheWork()
                 end
             end
         end
+        db_data.totalMove = db_data.totalMove - y
+        persistence.save_database(db_data,myName)
     end
     if not turtle.detectDown() then
         move.dn(tonumber(HEIGHT))
     end
+    if totalMove % 2 ~= 0 then
+        if WIDTH % 2 == 0 then
+            move.fd(WIDTH)
+            if startSide == "r" then
+                turtle.turnRight()
+            else
+                turtle.turnLeft()
+            end
+        else
+            if startSide == "r" then
+                turtle.turnLeft()
+            else
+                turtle.turnRight()
+            end
+        end
+        depositOres(go_that_many_back)
+    end
+
+    db_data.running = false
+    persistence.save_database(db_data,myName)
+    print("I'm done here boss")
 end
 
---check_basics.checkBasicSetup(start_items)
---doTheWork()
+doTheWork()
+persistence.remove_db(myName)
 -- TODO
 -- We want to have a resume function, so it could just continue the job if it
 -- for any reason stops.
 -- calculate all necessary fuel do performe the task
+--
+-- DATABASE Structure
+--[[
 db_data = persistence.open_database(myName)
 
 db_data.position = {}
@@ -251,10 +330,13 @@ db_data.startSide = params[2] -- param[2]
 db_data.width = 0 -- param[3]
 db_data.height = 0 -- param[4]
 -- Task in progress
-db_data.position.curr_y = 0 -- totalMove
+db_data.position.curr_y = 5 -- totalMove
 db_data.position.curr_x = 0 -- HEIGHT
 db_data.position.curr_width = 0 -- WIDTH
 db_data.position.curr_side = "l"
 db_data.position.curr_pos = "floor"
 
 persistence.save_database(db_data,myName)
+print(db_data.position.curr_pos)
+
+--]]

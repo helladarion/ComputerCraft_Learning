@@ -50,6 +50,11 @@ function open_database(caller)
     end
 end
 
+function remove_db(caller)
+    dbname = "./db/"..getCallerData(caller).."_db.json"
+    fs.delete(dbname)
+end
+
 function save_database(db_data,caller)
     dbname = "./db/"..getCallerData(caller).."_db.json"
     save_file(db_data,dbname)

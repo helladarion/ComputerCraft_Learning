@@ -523,7 +523,7 @@ function getStarterFacingDirection()
        db_data.facing.current = swapFacing(starter_dir)
        --create the base chest
        createStuff(1,chest)
-       if turtle.getItemCount(13) > 0 then 
+       if turtle.getItemCount(13) > 0 then
            turtle.select(13)
        else
            turtle.select(15)
