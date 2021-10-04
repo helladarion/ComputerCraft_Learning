@@ -137,20 +137,26 @@ function depositOres(steps)
 end
 
 function doTheWork()
+-- Calc how much movement will be needed to perform the run
+-- WIDTH * HEIGHT * totalDepth + ((totalDeth/2)*(totalDepth/2)+1)
+-- 20
+
     db_data = persistence.open_database(myName)
     -- we want to check if we stopped in the middle or if that is a new run
     if db_data.running == false or db_data.running == nil then
         -- new run
+        print("This is a new run")
         db_data.position = {}
         check_basics.checkBasicSetup(start_items)
         db_data.running = true
-        totalMove = tonumber(params[1])
+        totalDepth = tonumber(params[1])
         side = params[2]
         startSide = side
         position = "floor"
         current_width = WIDTH
         current_height = HEIGHT
-        print("Starting a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalMove.." times.")
+        gascontrol.precharge(WIDTH * HEIGHT * totalDepth + ((totalDepth/2)*(totalDepth/2)+1))
+        print("Starting a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalDepth.." times.")
         -- Place chest to store the ores
         turtle.select(CHEST_SLOT)
         turtle.placeUp()
@@ -164,10 +170,11 @@ function doTheWork()
             current_side="l"
         end
     else
+        print("We are resuming the task")
         -- resuming run
         -- TODO Fix reading values from json.
         resumed = true
-        totalMove = db_data.totalMove
+        totalDepth = db_data.totalDepth
         side = db_data.position.curr_side
         startSide = db_data.startSide
         position = db_data.position.curr_pos
@@ -176,11 +183,11 @@ function doTheWork()
         current_width = (db_data.position.curr_width -1)
         current_height = db_data.position.curr_height
         --print("WIDTH VALUE: "..db_data[1].porsition)
-        --print("Resuming a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalMove.." times.")
+        print("Resuming a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalDepth.." times.")
         current_side = db_data.position.curr_side
     end
     -- Store start info
-    db_data.totalMove = totalMove -- param[1]
+    db_data.totalDepth = totalDepth -- param[1]
     db_data.startSide = startSide -- param[2]
     db_data.width = WIDTH -- param[3]
     db_data.height = HEIGHT -- param[4]
@@ -189,12 +196,12 @@ function doTheWork()
     db_data.position.curr_pos = position
 
     -- TODO Calculate how much fuel is necessary to perform the run
-    for y=1, totalMove do
-        db_data.position.curr_y = y -- totalMove
-        if turtle.getItemCount(16) < 4 then
-            print("Not enough fuel to perform the run")
-            error()
-        end
+    for y=1, totalDepth do
+        db_data.position.curr_y = y -- totalDepth
+        --if turtle.getItemCount(16) < 4 then
+        --    print("Not enough fuel to perform the run")
+        --    error()
+        --end
         print("Executing layer: "..y)
         if db_data.position.curr_height == HEIGHT or db_data.position.curr_height == nil then
             current_height = 1
@@ -235,7 +242,7 @@ function doTheWork()
         end
         if current_side == "r" then
             turtle.turnLeft()
-            if not (y == totalMove) then
+            if not (y == totalDepth) then
                 caveWalkDig(1)
                 go_that_many_back = y + 1
             else
@@ -245,7 +252,7 @@ function doTheWork()
             current_side="l"
         else
             turtle.turnRight()
-            if not (y == totalMove) then
+            if not (y == totalDepth) then
                 caveWalkDig(1)
                 go_that_many_back = y + 1
             else
@@ -274,7 +281,7 @@ function doTheWork()
             end
             print("My side is "..current_side.." we will go back that many "..go_that_many_back)
             depositOres(go_that_many_back)
-            if y ~= totalMove then
+            if y ~= totalDepth then
                 move.fd(go_that_many_back)
                 if current_side == "r" then
                     turtle.turnRight()
@@ -283,13 +290,13 @@ function doTheWork()
                 end
             end
         end
-        db_data.totalMove = db_data.totalMove - y
+        db_data.totalDepth = db_data.totalDepth - y
         persistence.save_database(db_data,myName)
     end
     if not turtle.detectDown() then
         move.dn(tonumber(HEIGHT))
     end
-    if totalMove % 2 ~= 0 then
+    if totalDepth % 2 ~= 0 then
         if WIDTH % 2 == 0 then
             move.fd(WIDTH)
             if startSide == "r" then
@@ -315,8 +322,7 @@ end
 doTheWork()
 persistence.remove_db(myName)
 -- TODO
--- We want to have a resume function, so it could just continue the job if it
--- for any reason stops.
+-- Resume not working perfectly
 -- calculate all necessary fuel do performe the task
 --
 -- DATABASE Structure
@@ -325,12 +331,12 @@ db_data = persistence.open_database(myName)
 
 db_data.position = {}
 db_data.running = false
-db_data.totalMove = params[1] -- param[1]
+db_data.totalDepth = params[1] -- param[1]
 db_data.startSide = params[2] -- param[2]
 db_data.width = 0 -- param[3]
 db_data.height = 0 -- param[4]
 -- Task in progress
-db_data.position.curr_y = 5 -- totalMove
+db_data.position.curr_y = 5 -- totalDepth
 db_data.position.curr_x = 0 -- HEIGHT
 db_data.position.curr_width = 0 -- WIDTH
 db_data.position.curr_side = "l"
