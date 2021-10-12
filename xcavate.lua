@@ -59,21 +59,37 @@ if params[3] ~= nil and params[4] ~= nil then
     print("Selected values are "..WIDTH.." and "..HEIGHT)
 else
     WIDTH = 20 -- Can be even or odd
-    HEIGHT = 15 -- Must be odd number i.e. 7, 9, 15
+    HEIGHT = 5 -- Must be odd number i.e. 7, 9, 15
 end
 local LIMIT = 15
 local CHEST_SLOT = 15
 
-function caveWalkDig(Qtt)
+function caveWalkDig(Qtt,upDown)
+    local default = false
+    upDown = upDown or (upDown == nil and default)
     if Qtt > 0 then
         for x=1, tonumber(Qtt) do
+            move.fd(1, true)
+            --[[
             while not move.fd(1) do
                 turtle.dig()
                 sleep(0.5)
             end
+            --]]
+            if upDown then
+                digUpDown()
+            end
             db_data.position.curr_width = Qtt - x
             persistence.save_database(db_data,myName)
         end
+    end
+end
+
+function digUpDown()
+    while turtle.detectUp() or turtle.detectDown() do
+        turtle.digUp()
+        turtle.digDown()
+        sleep(0.5)
     end
 end
 
@@ -155,12 +171,14 @@ function doTheWork()
         position = "floor"
         current_width = WIDTH
         current_height = HEIGHT
-        gascontrol.precharge(WIDTH * HEIGHT * totalDepth + ((totalDepth/2)*(totalDepth/2)+1))
+        gascontrol.precharge(WIDTH * (HEIGHT*3) * totalDepth + ((totalDepth/2)*(totalDepth/2)+1))
         print("Starting a "..tostring(WIDTH).." by "..tostring(HEIGHT).." -> "..totalDepth.." times.")
         -- Place chest to store the ores
         turtle.select(CHEST_SLOT)
         turtle.placeUp()
         caveWalkDig(1)
+        move.up(1, true)
+        turtle.digUp()
 
         if side == "r" then
             turtle.turnRight()
@@ -211,18 +229,18 @@ function doTheWork()
         for x=tonumber(current_height), tonumber(HEIGHT) do
             db_data.position.curr_height = x -- HEIGHT
             if resumed == true then
-                caveWalkDig(current_width)
+                caveWalkDig(current_width, true)
                 resumed = false
             else
-                caveWalkDig(WIDTH)
+                caveWalkDig(WIDTH, true)
             end
             if not (x == tonumber(HEIGHT)) then
                 if y % 2 == 0 then
+                    move.dn(3, true)
                     turtle.digDown()
-                    move.dn(1)
                 else
+                    move.up(3, true)
                     turtle.digUp()
-                    move.up(1)
                 end
                 -- finished line
                 move.rd(1)
@@ -243,7 +261,7 @@ function doTheWork()
         if current_side == "r" then
             turtle.turnLeft()
             if not (y == totalDepth) then
-                caveWalkDig(1)
+                caveWalkDig(1, true)
                 go_that_many_back = y + 1
             else
                 go_that_many_back = y
@@ -253,7 +271,7 @@ function doTheWork()
         else
             turtle.turnRight()
             if not (y == totalDepth) then
-                caveWalkDig(1)
+                caveWalkDig(1, true)
                 go_that_many_back = y + 1
             else
                 go_that_many_back = y
@@ -274,6 +292,7 @@ function doTheWork()
         -- Do the deposit with any size
         -- we want to check on the second iteration
         if position == "floor" then
+            move.dn(1)
             if current_side == "r" then
                 turtle.turnLeft()
             else
@@ -289,6 +308,7 @@ function doTheWork()
                     turtle.turnLeft()
                 end
             end
+            move.up(1)
         end
         db_data.totalDepth = db_data.totalDepth - y
         persistence.save_database(db_data,myName)

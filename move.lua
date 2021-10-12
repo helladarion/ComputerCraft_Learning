@@ -1,10 +1,16 @@
 os.loadAPI("/ComputerCraft_Learning/gascontrol.lua")
 
-function up(qtde)
+function up(qtde, destroy)
+    destroy = destroy or false
     for i=1, qtde do
         gascontrol.checkFuel()
         if not turtle.up() then
-            return turtle.up()
+            if destroy then
+                turtle.digUp()
+                sleep(0.5)
+                turtle.up()
+            end
+            --return turtle.up()
         end
     end
     return true
@@ -16,20 +22,28 @@ function fd(qtde, destroy)
         gascontrol.checkFuel()
         if not turtle.forward() then
             if destroy then
-                turtle.dig()
-                turtle.forward()
+                while not turtle.forward() do
+                    turtle.dig()
+                    sleep(0.5)
+                end
             end
-            return turtle.forward()
+            --return turtle.forward()
         end
     end
     return true
 end
 
-function dn(qtde)
+function dn(qtde, destroy)
+    destroy = destroy or false
     for i=1, qtde do
         gascontrol.checkFuel()
         if not turtle.down() then
-            return turtle.down()
+            if destroy then
+                turtle.digDown()
+                sleep(0.5)
+                turtle.down()
+            end
+            --return turtle.down()
         end
     end
     return true
