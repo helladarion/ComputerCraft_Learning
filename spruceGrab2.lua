@@ -235,7 +235,7 @@ if #tArgs == 1 then
     print("We are going to collect "..stacks.." stacks")
     doRoutine(stacks)
 else
-    print("You must specify the number of stacks your want!")
+    print("You must specify the number of stacks you want!")
 end
 
 --TODO
