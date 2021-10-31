@@ -1,11 +1,11 @@
 --monitor = peripheral.wrap("top")
 wifi = false
-if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
-    rednet.open("Left")
+side="Right"
+if peripheral.isPresent(side) and peripheral.getType(side) == "modem" then
+    rednet.open(side)
     print("Wifi is ON")
     wifi=true
 end
-channel=2
 
 print("["..os.getComputerID().."] Waiting for commands")
 while wifi do
@@ -14,7 +14,8 @@ while wifi do
         print("Command Received")
         print("[ "..id.." ] "..cmd.." - prot: "..args)
         if cmd == "wood" then
-            shell.run("ComputerCraft_Learning/spruceGrab",args)
+            shell.setDir("ComputerCraft_Learning")
+            shell.run("log",args)
         end
         --monitor.write("[ "..id.." ] "..msg.." - prot: "..prot)
     else
