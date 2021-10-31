@@ -13,6 +13,23 @@ function groupSimilar()
     end
 end
 
+function organizeItems(limit)
+    limit = limit or 12
+    for i=1, limit do
+        freeSlot=nil
+        if turtle.getItemCount(i) == 0 then
+            freeSlot=i
+            for x=i, limit do
+                if turtle.getItemCount(x) > 0 then
+                    turtle.select(x)
+                    turtle.transferTo(freeSlot)
+                    break
+                end
+            end
+        end
+    end
+end
+
 local LIMIT = 15
 
 function cleanBlackList()
