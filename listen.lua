@@ -11,13 +11,14 @@ print("["..os.getComputerID().."] Waiting for commands")
 while wifi do
     id, cmd, args = rednet.receive(5)
     if id ~= null then
-        print("Command Received")
-        print("[ "..id.." ] "..cmd.." - prot: "..args)
-        if cmd == "wood" then
+        if cmd.sType == "lookup" then
+            print("Received lookup check")
+        else
+            print("Command Received")
+            print("[ "..id.." ] "..cmd.." - prot: "..args)
             shell.setDir("ComputerCraft_Learning")
-            shell.run("log",args)
+            shell.run(cmd,args)
         end
-        --monitor.write("[ "..id.." ] "..msg.." - prot: "..prot)
     else
         print("idle")
         sleep(2)
