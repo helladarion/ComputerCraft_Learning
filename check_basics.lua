@@ -32,8 +32,8 @@ end
 
 local LIMIT = 15
 
-function cleanBlackList()
-    black_list = {
+function cleanBlackList(black_list)
+    list = {
         "minecraft:cobblestone",
         "minecraft:gravel",
         "minecraft:granite",
@@ -42,6 +42,7 @@ function cleanBlackList()
         "minecraft:dirt",
         "minecraft:andesite"
     }
+    black_list = black_list or list
 
     for i=1, LIMIT do
         for _, item in pairs(black_list) do
