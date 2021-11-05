@@ -8,7 +8,8 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
 end
 channel=2
 turtle.select(1)
-start_items = {[16] = {"minecraft:coal",5}, [1] = {"minecraft:wheat_seeds",10}}
+start_items = {[16] = {"minecraft:charcoal",5}, [1] = {"minecraft:wheat_seeds",10}}
+gap_between_layers=3
 
 --[[
 * We want to accomplish several layers of farming
@@ -19,15 +20,29 @@ seeds and wheat it doesn't actually need a modem.
 --]]
 
 function createWater()
-    move.dn(1,true)
     turtle.turnRight()
-    turtle.dig()
+    move.fd(1)
+    turtle.select(1)
+    turtle.place()
+    for i=1, 3 do
+        turtle.turnRight()
+        turtle.place()
+        move.rd(1)
+        turtle.place()
+        turtle.turnRight()
+        if i ~= 3 then
+            move.bk(1)
+        end
+    end
+    move.rd(1)
+    turtle.place()
+    move.bk(1)
     turtle.select(14)
     turtle.place()
-    move.rd()
-    turtle.dig()
+    move.rd(1)
     turtle.select(15)
     turtle.place()
+    turtle.turnLeft()
     move.up(1)
 end
 
@@ -44,51 +59,112 @@ function checkDirtAmount(needed)
     check_basics.cleanBlackList(black_list)
     check_basics.organizeItems()
     dirtTotal=0
-    while dirtTotal < needed  do
-        for i=1, 16 do
-            itemDetail = turtle.getItemDetail(i)
-            if itemDetail ~= nil and itemDetail.name == "minecraft:dirt" then
-                dirtTotal = dirtTotal + itemDetail.count
-            end
+    for i=1, 16 do
+        itemDetail = turtle.getItemDetail(i)
+        if itemDetail ~= nil and itemDetail.name == "minecraft:dirt" then
+            dirtTotal = dirtTotal + itemDetail.count
         end
+    end
+    if dirtTotal < needed then
         local stillNeed = needed - dirtTotal
         print("We still need "..stillNeed.." dirt")
-        sleep(10)
+        error()
     end
 end
 
 -- Prepare terrain
-function prepareLayer(howMany)
+function prepareLayer(howManyLayers)
     -- We also need to know how many dirt we will need for the job before start
     layerDirt=81
+    checkDirtAmount(layerDirt*howManyLayers+8)
+    start_items = {[16] = {"minecraft:charcoal",5}, [1] = {"minecraft:dirt",64}, [15] = {"minecraft:water_bucket",1}, [14] = {"minecraft:water_bucket",1}}
+    check_basics.checkBasicSetup(start_items)
+    createWater()
+    -- fill buckets
+    turtle.select(14)
+    turtle.placeDown()
+    turtle.select(15)
+    turtle.placeDown()
 
-    start_items = {[16] = {"minecraft:charcoal",5}, [1] = {"minecraft:dirt",10}, [15] = {"minecraft:water_bucket",1}, [14] = {"minecraft:water_bucket",1}}
     -- Setup an infinite water source, and fill the buckets
     -- We want to know how many layers we will be creating
     -- Each layer will need:
     -- * 9x9=81 or a stack + 17 dirt with 1 water source in the middle
-    for i=1, howMany do
-        for x=1, 9 do
-            for y=1, 8 do
-                -- place the dirt
+    for i=1, howManyLayers do
+        -- prepare all the layers
+        print("Starting to prepare layer: "..i)
+        -- we want to have those platforms suspended
+        move.up(gap_between_layers)
+        for pass=1, 2 do
+            for x=1, 9 do
+                for y=1, 9 do
+                    -- deal with missing dirt
+                    if turtle.getItemCount(1) < 2 then
+                        check_basics.groupSimilar()
+                        check_basics.organizeItems()
+                    end
+                    turtle.select(1)
+                    move.fd(1)
+                    if x == 5 and y == 5 and pass == 1 then
+                        -- place dirt one layer down and place water
+                        move.dn(1)
+                        turtle.placeDown()
+                        move.up(1)
+                        if turtle.getItemDetail(14).name == "minecraft:water_bucket" then
+                            bucket=14
+                        else
+                            bucket=15
+                        end
+                        turtle.select(bucket)
+                        turtle.placeDown()
+                        turtle.select(1)
+                    else
+                        if pass == 1 then
+                            turtle.placeDown()
+                        else
+                            turtle.digDown()
+                        end
+                    end
+                end
+                if x % 2 == 0 then
+                    turn_dir={d = turtle.turnLeft}
+                else
+                    turn_dir={d = turtle.turnRight}
+                end
+                if x ~= 9 and y ~= 9 then
+                    move.fd(1)
+                    turn_dir.d()
+                    move.fd(1)
+                    turn_dir.d()
+                end
             end
-            if x % 2 == 0 then
-                turn_dir={d = turtle.turnLeft}
+            move.fd(1)
+            if pass == 1 then
+                move.up(1)
             else
-                turn_dir={d = turtle.turnRight}
+                -- refil bucket 14
+                print("Refilling water bucket")
+                turtle.select(14)
+                move.dn(i*(gap_between_layers+1))
+                turtle.placeDown()
+                move.up(i*(gap_between_layers+1))
+                turtle.select(1)
             end
-            if x ~= 9 and y ~= 8 then
-                turn_dir.d()
-                move.fd(1)
-                turn_dir.d()
-            end
+            move.rd(1)
+        end
+        if i < tonumber(howManyLayers) then
+            print("We are done with layer: "..i)
+            time.wait(1)
+        else
+            print("Job done boss")
+            move.dn(i*(gap_between_layers+1))
         end
     end
 end
 
 function plantHarvestCrops()
     for x=1,9 do
-        for i=1,8 do
+        for i=1,9 do
             move.fd(1)
             checkCrops()
         end
@@ -97,16 +173,27 @@ function plantHarvestCrops()
         else
             turn_dir={d = turtle.turnRight}
         end
-        if x ~= 9 and i ~= 8 then
+        if x ~= 9 and i ~= 9 then
+            move.fd(1)
             turn_dir.d()
             move.fd(1)
             turn_dir.d()
-            checkCrops()
         end
     end
 end
-
-function checkPos()
+--[[
+function deposit(item)
+    turtle.select(item)
+    qtt = turtle.getItemCount(item)
+    turtle.turnLeft()
+    if qtt > 0 then
+        turtle.dropDown(qtt - 1)
+    end
+    turtle.turnRight()
+end
+--]]
+function checkPos(deposit)
+    deposit = deposit or false
     crop_list = { "minecraft:wheat_seeds",
                   "minecraft:wheat"
                 }
@@ -121,8 +208,20 @@ function checkPos()
                 if currentItem.name == item then
                     if item == "minecraft:wheat_seeds" then
                         seed_pos=i
+                        if deposit then
+                            turtle.select(seed_pos)
+                            turtle.turnRight()
+                            turtle.drop()
+                            turtle.turnLeft()
+                        end
                     else
                         wheat_pos=i
+                        if deposit then
+                            turtle.select(wheat_pos)
+                            turtle.turnLeft()
+                            turtle.drop()
+                            turtle.turnRight()
+                        end
                     end
                 end
             end
@@ -146,22 +245,11 @@ function checkCrops()
 end
 
 function doRoutine()
-    move.fd(1)
+    move.up(1*(gap_between_layers+1))
     plantHarvestCrops()
     move.fd(1)
     move.rd(1)
 end
-
-function deposit(item)
-    turtle.select(item)
-    qtt = turtle.getItemCount(item)
-    turtle.turnLeft()
-    if qtt > 0 then
-        turtle.dropDown(qtt - 1)
-    end
-    turtle.turnRight()
-end
-
 
 params = { ... }
 if #params < 1 then
@@ -170,19 +258,23 @@ if #params < 1 then
 end
 totalLayers = params[1]
 if params[2] == "p" then
-    checkDirtAmount(81*5)
-    check_basics.checkBasicSetup(start_items)
+    prepareLayer(totalLayers)
 else
     check_basics.checkBasicSetup(start_items)
     count = 1
     while true do
-        doRoutine()
-        check_basics.groupSimilar()
-        checkPos()
-        if count % 2 == 0 then
-            deposit(wheat_pos)
-        else
-            deposit(seed_pos)
+        for i=1, totalLayers do
+            doRoutine()
+            check_basics.groupSimilar()
+            check_basics.organizeItems()
+            checkPos()
+        end
+        move.dn(totalLayers*(gap_between_layers+1))
+        print("We need to deposit the items.")
+        checkPos(true)
+        while turtle.getItemCount(16) < 5 do
+            print("Man I can't do another run. please refil slot 16")
+            sleep(30)
         end
         count = count + 1
         time.wait(5)
