@@ -84,7 +84,7 @@ function cutit()
     move.fd(1)
     -- Initiating while loop
     local boole, array_t = turtle.inspectUp()
-    while boole and array_t.name == "minecraft:spruce_log" do
+    while boole or array_t.name == "minecraft:spruce_log" do
         turtle.digUp()
         turtle.dig()
         move.up(1)
@@ -99,7 +99,7 @@ function cutit()
     end
     turtle.turnLeft()
     local boole, array_t = turtle.inspectDown()
-    while boole and array_t.name == "minecraft:spruce_log" do
+    while boole and array_t.name ~= "minecraft:podzol" do
         turtle.digDown()
         turtle.dig()
         move.dn(1)
