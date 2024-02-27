@@ -25,16 +25,15 @@ end
 
 function caveWalkDig(Qtt)
     for x=1, Qtt do
-        while not move.fd(1) do
-            turtle.dig()
-            sleep(0.5)
-        end
+        move.fd(1, true)
         digUpDown()
     end
 end
 
 function shaft(howfar)
+    print("Here we are in the shaft program")
     for x=1, howfar do
+        print("Trying CaveDig")
         caveWalkDig(1)
         -- place torches every 14
         if x == 1 then
@@ -75,6 +74,7 @@ function doTheWork()
         rednet.send(channel, "Starting the work, shaft with "..totalMove.." and turning to the "..side, "status")
     end
 
+    print("Executing shaft")    
     shaft(totalMove)
     -- turn and get ready to go back, from other shaft
     if wifi == true then
