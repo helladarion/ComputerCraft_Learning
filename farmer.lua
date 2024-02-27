@@ -8,8 +8,9 @@ if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
 end
 channel=2
 turtle.select(1)
-start_items = {[16] = {"minecraft:charcoal",5}, [1] = {"minecraft:wheat_seeds",10}}
+start_items = {[16] = {"minecraft:coal",5}, [1] = {"minecraft:wheat_seeds",10}}
 gap_between_layers=3
+wait_between_checks=2
 
 --[[
 * We want to accomplish several layers of farming
@@ -227,6 +228,12 @@ function checkPos(deposit)
             end
         end
     end
+    -- Getting seeds to replant the first crops
+    if deposit then
+    	turtle.turnRight()
+    	turtle.suck(10)
+    	turtle.turnLeft()
+    end
 end
 
 function checkCrops()
@@ -275,8 +282,14 @@ else
         while turtle.getItemCount(16) < 5 do
             print("Man I can't do another run. please refil slot 16")
             sleep(30)
+	    print("Auto Recharging")
+	    turtle.turnRight()
+	    turtle.turnRight()
+	    turtle.suck(10)
+	    turtle.turnLeft()
+	    turtle.turnLeft()
         end
         count = count + 1
-        time.wait(5)
+        time.wait(wait_between_checks)
     end
 end
