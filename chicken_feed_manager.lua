@@ -33,7 +33,9 @@ for slot, item in pairs(modem.list()) do
 	for _, iname in pairs(items_to_check) do
 		if item.name == iname then
 			if item.count < 500 then
-			    print("["..item.count.."]".." "..item.name) 
+                missing = 500 - item.count
+			    print("["..item.count.."]".." "..item.name, missing) 
+                print("We need to add "..math.ceil(missing / 3).. " seeds")
                 -- Send message to aumoxarife to refil the specific chicken
                 -- with the necessary amount to reach 500+
             end
