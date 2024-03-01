@@ -6,7 +6,7 @@ if peripheral.isPresent(side) and peripheral.getType(side) == "modem" then
     wifi=true
 end
 listen_computerId=3
-MaxAmount=200
+MaxAmount=210
 
 params = { ... }
 
@@ -14,26 +14,28 @@ function refil_item(who, qtt)
     if wifi == true then
         print("Asking to refil "..who)
         rednet.send(listen_computerId, "feed_chicken", who.." "..qtt)
-        sleep(25)
-        id=nil
-        --[[
-        while id == nil do 
-            id, cmd, args = rednet.receive(5)
-            if cmd.sType == "lookup" then
-                print("Received lookup check")
-            else
-                print("Command Received")
-                print("[ "..id.." ] "..cmd.." - prot: "..args)
-                if cmd == "Task Done" then
-                    print("Process Done")
-                    break
+        process="working"
+        count=1
+        while process ~= "done" do 
+            id, cmd = rednet.receive(5)
+            if id ~= nil then
+                if cmd.sType == "lookup" then
+                    print("Received lookup check")
                 else
-                    print("idle")
-                    sleep(2)
+                    print("Command Received")
+                    print("[ "..id.." ] "..cmd)
+                    if cmd == "Command Received" then
+                        print("Doing Task")
+                    elseif cmd == "Task Done" then
+                        print("We are done with "..who)
+                        process="done"
+                    end
                 end
+            else
+                print("idle")
+                count = count + 1
             end
         end
-        --]]
     end
 end
 
