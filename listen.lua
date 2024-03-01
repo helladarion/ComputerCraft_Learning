@@ -10,11 +10,12 @@ end
 print("["..os.getComputerID().."] Waiting for commands")
 while wifi do
     id, cmd, args = rednet.receive(5)
-    if id ~= null then
+    if id ~= nil then
         if cmd.sType == "lookup" then
             print("Received lookup check")
         else
             print("Command Received")
+            rednet.send(id, "Command Received")
             print("[ "..id.." ] "..cmd.." - prot: "..args)
             shell.setDir("ComputerCraft_Learning")
             shell.run(cmd,args)
@@ -22,7 +23,6 @@ while wifi do
         end
     else
         print("idle")
-        sleep(2)
     end
 end
 if not wifi then print("No Modem") end
