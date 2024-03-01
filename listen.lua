@@ -1,6 +1,6 @@
 --monitor = peripheral.wrap("top")
 wifi = false
-side="Right"
+side="Left"
 if peripheral.isPresent(side) and peripheral.getType(side) == "modem" then
     rednet.open(side)
     print("Wifi is ON")
@@ -18,6 +18,7 @@ while wifi do
             print("[ "..id.." ] "..cmd.." - prot: "..args)
             shell.setDir("ComputerCraft_Learning")
             shell.run(cmd,args)
+            rednet.send(id, "Task Done")
         end
     else
         print("idle")
