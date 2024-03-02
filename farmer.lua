@@ -1,9 +1,10 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
 os.loadAPI("/ComputerCraft_Learning/time.lua")
 os.loadAPI("/ComputerCraft_Learning/check_basics.lua")
-if peripheral.isPresent("Left") and peripheral.getType("Left") == "modem" then
-    rednet.open("Left")
-    print("Openned Wifi on the left side")
+side="Right"
+if peripheral.isPresent(side) and peripheral.getType(side) == "modem" then
+    rednet.open(side)
+    print("Openned Wifi on the "..side.." side")
     wifi=true
 end
 channel=2
