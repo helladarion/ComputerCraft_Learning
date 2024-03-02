@@ -17,11 +17,15 @@ while wifi do
             print("Received lookup check")
         else
             print("Command Received")
-            rednet.send(id, "Command Received")
             print("[ "..id.." ] "..cmd.." - prot: "..args)
             shell.setDir("ComputerCraft_Learning")
-            shell.run(cmd,args)
-            rednet.send(id, "Task Done")
+            if cmd == "ping" then
+                shell.run(cmd,tonumber(args))
+            else
+                rednet.send(id, "Command Received")
+                shell.run(cmd,args)
+                rednet.send(id, "Task Done")
+            end
         end
     else
         print("idle")

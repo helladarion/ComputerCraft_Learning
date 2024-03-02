@@ -1,10 +1,12 @@
-local modem = peripheral.wrap("right")
-side="top"
-if peripheral.isPresent(side) and peripheral.getType(side) == "modem" then
-    rednet.open(side)
-    print("Openned Wifi on the ".. side .." side")
-    wifi=true
+wifi = false
+for _, side in pairs(peripheral.getNames()) do
+    if peripheral.getType(side) == "modem" then
+        rednet.open(side)
+        print("Wifi is ON")
+        wifi=true
+    end
 end
+
 listen_computerId=3
 MaxAmount=210
 
