@@ -1,3 +1,4 @@
+modem = peripheral.wrap("right")
 wifi = false
 for _, side in pairs(peripheral.getNames()) do
     if peripheral.getType(side) == "modem" then
@@ -8,7 +9,7 @@ for _, side in pairs(peripheral.getNames()) do
 end
 
 listen_computerId=3
-MaxAmount=210
+MaxAmount=500
 
 params = { ... }
 
@@ -42,18 +43,18 @@ function refil_item(who, qtt)
 end
 
 for slot, item in pairs(modem.list()) do
-	--[[
-	if string.find(item.name,"rod") then
+    --[[
+	if string.find(item.name,"quart") then
 		print(item.name)
 	end
-	--]]
+    --]]
 	items_to_check={
 		"minecraft:redstone", 
 		"minecraft:iron_ingot", 
 		"minecraft:gold_ingot", 
 		"minecraft:glowstone",
 		"minecraft:oak_log",
-		"minecraft:quartz_enriched_iron",
+		"refinedstorage:quartz_enriched_iron",
 		"minecraft:quartz",
 		"minecraft:ender_pearl",
 		"minecraft:diamond",

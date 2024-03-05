@@ -1,13 +1,16 @@
 os.loadAPI("/ComputerCraft_Learning/move.lua")
 os.loadAPI("/ComputerCraft_Learning/time.lua")
 os.loadAPI("/ComputerCraft_Learning/check_basics.lua")
-side="Right"
-if peripheral.isPresent(side) and peripheral.getType(side) == "modem" then
-    rednet.open(side)
-    print("Openned Wifi on the "..side.." side")
-    wifi=true
+
+wifi = false
+for _, side in pairs(peripheral.getNames()) do
+    if peripheral.getType(side) == "modem" then
+        rednet.open(side)
+        print("Wifi is ON")
+        wifi=true
+    end
 end
-channel=2
+
 turtle.select(1)
 start_items = {[16] = {"minecraft:coal",5}, [1] = {"minecraft:wheat_seeds",10}}
 gap_between_layers=3
@@ -260,6 +263,7 @@ function doRoutine()
 end
 
 params = { ... }
+remote=false
 if #params < 1 then
     print("Usage: farmer <layers> <p> for prepare")
     return
@@ -270,7 +274,7 @@ if params[2] == "p" then
 else
     check_basics.checkBasicSetup(start_items)
     count = 1
-    while true do
+    while remote == false do
         for i=1, totalLayers do
             doRoutine()
             check_basics.groupSimilar()
@@ -284,13 +288,19 @@ else
             print("Man I can't do another run. please refil slot 16")
             sleep(30)
 	    print("Auto Recharging")
+        turtle.select(16)
 	    turtle.turnRight()
 	    turtle.turnRight()
 	    turtle.suck(10)
 	    turtle.turnLeft()
 	    turtle.turnLeft()
+        turtle.select(1)
         end
         count = count + 1
-        time.wait(wait_between_checks)
+        if params[2] == "r" then
+            remote=true
+        else
+            time.wait(wait_between_checks)
+        end
     end
 end

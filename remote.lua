@@ -7,11 +7,9 @@ for _, side in pairs(peripheral.getNames()) do
     end
 end
 
-function list_machines()
-    rednet.broadcast("ping",tostring(os.getComputerID()))
-    process="working"
+function wait_response()
     while process ~= "done" do 
-        id, cmd = rednet.receive(5)
+        id, cmd = rednet.receive(1)
         if id ~= nil then
             if cmd.sType == "lookup" then
                 print("Received lookup check")
@@ -20,15 +18,49 @@ function list_machines()
                 print("[ "..id.." ] "..cmd)
             end
         else
-            print("idle")
+            --print("idle")
             process="done"
         end
     end
 end
 
+function list_machines()
+    rednet.broadcast("ping",tostring(os.getComputerID()))
+    process="working"
+    wait_response()
+end
+
 
 params = { ... }
 
+if #params < 1 then
+    print("Usage: remote list [to list machines and ids")
+    print("remote <id> <command> <args>")
+    return
+end
+
+if params[1] == "list" then
+    list_machines()
+end
+
+if #params > 1 then
+    id = tonumber(params[1])
+    cmd = params[2]
+    if cmd == "feed" then
+        cmd = "chicken_feed_manager"
+        args = "feed"
+    elseif cmd == "seed" then
+        cmd = "farmer"
+        args = '2 r'
+    else
+        args = params[3]
+        if params[4] ~= nil then
+            args = args .." " .. params[4]
+        end
+    end
+    rednet.send(id,cmd,args)
+    wait_response()
+end
 
 --[[
 if #params < 1 then
