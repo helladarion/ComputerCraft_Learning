@@ -15,7 +15,7 @@ function wait_response()
                 print("Received lookup check")
             else
                 --print("Command Received")
-                print("[ "..id.." ] "..cmd)
+                print("["..id.."] "..cmd)
             end
         else
             --print("idle")
@@ -47,11 +47,20 @@ if #params > 1 then
     id = tonumber(params[1])
     cmd = params[2]
     if cmd == "feed" then
+        save_id = id
+        cmd = "chicken_feed_manager"
+        args = "report"
+        rednet.send(id,cmd,args)
+        wait_response()
+        id = tonumber(save_id)
         cmd = "chicken_feed_manager"
         args = "feed"
     elseif cmd == "seed" then
         cmd = "farmer"
         args = '2 r'
+    elseif cmd == "report" then
+        cmd = "chicken_feed_manager"
+        args = "report"
     else
         args = params[3]
         if params[4] ~= nil then

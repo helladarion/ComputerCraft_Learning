@@ -9,9 +9,44 @@ for _, side in pairs(peripheral.getNames()) do
 end
 
 listen_computerId=3
-MaxAmount=500
+tablet_id=4
+MaxAmount=800
 
 params = { ... }
+
+--function split(str,sep)
+--    sep = sep or ":"
+--    local ret = {}
+--    for token in str:gmatch("[^"..sep.."]+") do
+--        ret[#ret+1] = token
+--    end
+--    return ret
+--end
+
+local function split(inputString, separatorCharacter)
+  if (type(separatorCharacter) ~= "string") then
+        separatorCharacter = "\n"
+  end
+  local returnTable = {}
+  local i = 1
+  --#We're going to be editing our input string, so we need to know when we're done
+  while (inputString ~= "") do
+        local start,endNum = string.find(inputString,separatorCharacter)
+        if (start == nil) then
+          returnTable[i] = inputString
+          inputString = ""
+        else
+          if (start == 1) then
+                returnTable[i] = ""
+          else
+                returnTable[i] = inputString:sub(1,start-1)
+          end
+          inputString = inputString:sub(endNum+1)
+        end
+        i = i + 1
+  end
+  return returnTable
+end
 
 function refil_item(who, qtt)
     if wifi == true then
@@ -83,8 +118,18 @@ for slot, item in pairs(modem.list()) do
                 print("We need to add "..seeds_needed.. " seeds")
                 -- Send message to aumoxarife to refil the specific chicken
                 -- with the necessary amount to reach 500+
-                if #params == 1 then
+                if params[1] == "feed" then
                     refil_item(item.name, seeds_needed)
+                elseif params[1] == "full" then
+                    while true do
+                        refil_item(item.name, seeds_needed)
+                        if item.count >= MaxAmount then
+                            break
+                        end
+                    end
+                elseif params[1] == "report" then
+                    item_name = split(item.name,":")[2]
+                    rednet.send(tablet_id, "["..item.count.."] "..item_name.." ".." "..missing)
                 end
             end
 		end
