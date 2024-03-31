@@ -10,7 +10,7 @@ end
 
 listen_computerId=3
 tablet_id=4
-MaxAmount=800
+MaxAmount=1200
 
 params = { ... }
 
