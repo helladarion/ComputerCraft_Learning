@@ -8,7 +8,7 @@ end
 channel=5
 turtle.select(1)
 
-start_items = {[16] = {"minecraft:coal",15}, [15] = {"minecraft:torch",30}, [14] = {"minecraft:chest",2}}
+start_items = {[16] = {"minecraft:charcoal",15}, [15] = {"minecraft:torch",30}, [14] = {"minecraft:chest",2}}
 -- coal on 16
 -- torches on 15
 -- 2 chests on 14
